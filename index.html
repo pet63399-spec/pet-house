@@ -174,91 +174,6 @@
         .hero-banner h2 { font-size: 21px; font-weight: 900; margin-bottom: 8px; position: relative; z-index: 1; }
         .hero-banner p { font-size: 13px; opacity: 0.9; line-height: 1.5; position: relative; z-index: 1; }
 
-        /* مؤشر ضوء تواجد الدكاترة بالعيادة (صغير في الجنب فوق) */
-        .doctor-live-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 11.5px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            white-space: nowrap;
-            user-select: none;
-        }
-        .doctor-live-badge:hover {
-            transform: scale(1.03);
-        }
-        
-        /* أخضر: من 4 عصراً إلى 11 مساءً */
-        .doctor-live-badge.online {
-            background: rgba(46, 204, 113, 0.14);
-            border: 1px solid rgba(46, 204, 113, 0.4);
-            color: #27ae60;
-        }
-        body.dark-mode .doctor-live-badge.online {
-            background: rgba(46, 204, 113, 0.18);
-            border-color: rgba(46, 204, 113, 0.55);
-            color: #2ecc71;
-        }
-        .doctor-live-badge.online .live-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #2ecc71;
-            border-radius: 50%;
-            position: relative;
-            box-shadow: 0 0 8px #2ecc71;
-        }
-        .doctor-live-badge.online .live-dot::after {
-            content: '';
-            position: absolute;
-            top: -3px; left: -3px; right: -3px; bottom: -3px;
-            border-radius: 50%;
-            background-color: rgba(46, 204, 113, 0.6);
-            animation: livePulseGreen 1.8s infinite ease-out;
-        }
-
-        /* أحمر: في باقي الأوقات خارج مواعيد 4 لـ 11 */
-        .doctor-live-badge.offline {
-            background: rgba(231, 76, 60, 0.12);
-            border: 1px solid rgba(231, 76, 60, 0.35);
-            color: #e74c3c;
-        }
-        body.dark-mode .doctor-live-badge.offline {
-            background: rgba(231, 76, 60, 0.2);
-            border-color: rgba(231, 76, 60, 0.5);
-            color: #ff6b6b;
-        }
-        .doctor-live-badge.offline .live-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #e74c3c;
-            border-radius: 50%;
-            position: relative;
-            box-shadow: 0 0 6px #e74c3c;
-        }
-        .doctor-live-badge.offline .live-dot::after {
-            content: '';
-            position: absolute;
-            top: -3px; left: -3px; right: -3px; bottom: -3px;
-            border-radius: 50%;
-            background-color: rgba(231, 76, 60, 0.5);
-            animation: livePulseRed 2s infinite ease-out;
-        }
-
-        @keyframes livePulseGreen {
-            0% { transform: scale(0.9); opacity: 0.9; }
-            60% { transform: scale(2.4); opacity: 0; }
-            100% { transform: scale(0.9); opacity: 0; }
-        }
-        @keyframes livePulseRed {
-            0% { transform: scale(0.9); opacity: 0.8; }
-            60% { transform: scale(2.2); opacity: 0; }
-            100% { transform: scale(0.9); opacity: 0; }
-        }
-
         .container { max-width: 520px; margin: 0 auto; padding: 0 15px 120px 15px; }
         
         .section-title { font-size: 18px; font-weight: 800; margin: 25px 0 12px; color: var(--primary-color); display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; }
@@ -574,12 +489,6 @@
             <img src="logo.png" alt="Pet House Veterinary Center">
         </a>
         <div class="header-actions">
-            <!-- ضوء حالة تواجد الدكاترة (صغير في الجنب فوق) -->
-            <div class="doctor-live-badge online" id="doctorLiveBadge" onclick="showDoctorHoursInfo()" title="حالة تواجد الأطباء بالعيادة">
-                <span class="live-dot" id="doctorLiveDot"></span>
-                <span id="doctorLiveText">دكتور متاح</span>
-            </div>
-
             <!-- زر حساب العميل -->
             <button class="user-pill-btn" id="userPillBtn" onclick="openProfileModal()">
                 <i class="fa-solid fa-user"></i>
@@ -1024,41 +933,6 @@
             }
         }
         updateGreeting();
-
-        // === مؤشر ضوء تواجد الدكاترة بالعيادة (من 4 عصراً لـ 11 مساءً أخضر، وباقي الأوقات أحمر) ===
-        function updateDoctorStatus() {
-            const now = new Date();
-            const hours = now.getHours();
-            const badge = document.getElementById('doctorLiveBadge');
-            const text = document.getElementById('doctorLiveText');
-            if (!badge || !text) return;
-
-            // المواعيد: من 4:00 عصراً (16:00) إلى 11:00 مساءً (23:00)
-            const isDoctorAvailable = (hours >= 16 && hours < 23);
-
-            if (isDoctorAvailable) {
-                badge.className = 'doctor-live-badge online';
-                badge.title = '🟢 الأطباء متواجدون الآن بالعيادة (المواعيد يومياً: من 4 عصراً حتى 11 مساءً)';
-                text.innerText = 'دكتور متاح';
-            } else {
-                badge.className = 'doctor-live-badge offline';
-                badge.title = '🔴 الأطباء غير متواجدين حالياً (مواعيد تواجد الأطباء: من 4 عصراً حتى 11 مساءً)';
-                text.innerText = 'دكتور غير متاح';
-            }
-        }
-        updateDoctorStatus();
-        setInterval(updateDoctorStatus, 60000);
-
-        function showDoctorHoursInfo() {
-            const now = new Date();
-            const hours = now.getHours();
-            const isOnline = (hours >= 16 && hours < 23);
-            if (isOnline) {
-                alert('🟢 الأطباء متواجدون الآن بالعيادة!\n\nمواعيد استقبال الكشوفات والعيادة:\nيومياً من الساعة 4:00 عصراً حتى 11:00 مساءً.');
-            } else {
-                alert('🔴 الأطباء غير متواجدين حالياً بالعيادة.\n\nمواعيد استقبال الكشوفات والعيادة:\nيومياً من الساعة 4:00 عصراً حتى 11:00 مساءً.');
-            }
-        }
 
         // === دارك مود / لايت مود ===
         const currentTheme = localStorage.getItem('petHouseTheme') || 'light';
