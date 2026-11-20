@@ -407,6 +407,76 @@
             background: #d35400;
             transform: scale(1.03);
         }
+
+        /* Social Media Footer */
+        .social-footer {
+            margin-top: 35px;
+            padding-top: 20px;
+            border-top: 2px dashed var(--border-color);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .footer-title {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .social-links-grid {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .social-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 800;
+            color: white;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            flex: 1;
+            min-width: 105px;
+            max-width: 145px;
+        }
+        .social-btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.95;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+        .social-btn i {
+            font-size: 17px;
+        }
+        .social-btn.facebook {
+            background: #1877f2;
+        }
+        .social-btn.instagram {
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+        }
+        .social-btn.tiktok {
+            background: #000000;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        body.dark-mode .social-btn.tiktok {
+            background: #111827;
+            border-color: #374151;
+        }
+        .footer-copy {
+            font-size: 11.5px;
+            color: var(--gray-color);
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -734,6 +804,30 @@
                 </div>
             </div>
         </div>
+
+        <!-- تذييل الصفحة / روابط التواصل الاجتماعي -->
+        <footer class="social-footer">
+            <div class="footer-title">
+                <i class="fa-solid fa-heart" style="color: #e74c3c;"></i> تابعنا وتواصل معنا على السوشيال ميديا
+            </div>
+            <div class="social-links-grid">
+                <a href="https://www.facebook.com/share/1CSAz3Y22d/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" class="social-btn facebook" title="صفحتنا على فيسبوك">
+                    <i class="fa-brands fa-facebook-f"></i>
+                    <span>فيسبوك</span>
+                </a>
+                <a href="https://www.instagram.com/pethouse1278?avpt=MWxnOGprbnZvdTV1dw==" target="_blank" rel="noopener noreferrer" class="social-btn instagram" title="حسابنا على انستجرام">
+                    <i class="fa-brands fa-instagram"></i>
+                    <span>انستجرام</span>
+                </a>
+                <a href="https://www.tiktok.com/@petshop_clinc?_r=1&_t=ZS-9BZau14EKbV" target="_blank" rel="noopener noreferrer" class="social-btn tiktok" title="حسابنا على تيك توك">
+                    <i class="fa-brands fa-tiktok"></i>
+                    <span>تيك توك</span>
+                </a>
+            </div>
+            <div class="footer-copy">
+                📍 المحلة الكبرى - شارع شكري القواتلي | 🐾 PET HOUSE
+            </div>
+        </footer>
 
     </div>
 
