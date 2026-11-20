@@ -342,6 +342,71 @@
             cursor: pointer;
         }
         .btn-reminder-dismiss:hover { border-color: var(--gray-color); color: var(--text-color); }
+
+        /* Cart Upsell Banner (Treats 35 EGP) */
+        .cart-upsell-banner {
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.12), rgba(230, 126, 34, 0.08));
+            border: 1px dashed #f39c12;
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin: 6px 0;
+            animation: popIn 0.25s ease;
+        }
+        body.dark-mode .cart-upsell-banner {
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.20), rgba(230, 126, 34, 0.15));
+            border-color: rgba(243, 156, 18, 0.5);
+        }
+        .upsell-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-align: right;
+        }
+        .upsell-icon {
+            font-size: 24px;
+            line-height: 1;
+        }
+        .upsell-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .upsell-text strong {
+            font-size: 12.5px;
+            color: #d35400;
+        }
+        body.dark-mode .upsell-text strong {
+            color: #f39c12;
+        }
+        .upsell-text span {
+            font-size: 11px;
+            color: var(--gray-color);
+            font-weight: 600;
+        }
+        .btn-upsell-add {
+            background: #e67e22;
+            color: white;
+            border: none;
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 11.5px;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: 0.2s;
+            box-shadow: 0 2px 6px rgba(230, 126, 34, 0.3);
+        }
+        .btn-upsell-add:hover {
+            background: #d35400;
+            transform: scale(1.03);
+        }
     </style>
 </head>
 <body>
@@ -685,7 +750,11 @@
             <form onsubmit="handleRegistration(event)" style="display:flex;flex-direction:column;gap:12px;">
                 <div class="form-group"><label><i class="fa-solid fa-user"></i> اسم العميل:</label><input type="text" class="form-input" id="regName" placeholder="مثال: أحمد محمد" required></div>
                 <div class="form-group"><label><i class="fa-solid fa-phone"></i> رقم الموبايل / واتساب:</label><input type="tel" class="form-input" id="regPhone" placeholder="مثال: 01012345678" required></div>
-                <div class="form-group"><label><i class="fa-solid fa-location-dot"></i> العنوان بالتفصيل:</label><input type="text" class="form-input" id="regAddress" placeholder="المنطقة / الشارع / علامة مميزة" required></div>
+                <div class="form-group">
+                    <label><i class="fa-solid fa-location-dot"></i> العنوان بالتفصيل (المنطقة / الحي):</label>
+                    <input type="text" class="form-input" id="regAddress" placeholder="مثال: الشعبية، الشون، شكري القواتلي، محلة البرج..." required>
+                    <span style="font-size:11px;color:var(--gray-color);">💡 يتم احتساب مصاريف التوصيل تلقائياً حسب البُعد عن مقر المحل في شارع شكري القواتلي</span>
+                </div>
                 <div style="border-top:1px solid var(--border-color);padding-top:12px;margin-top:4px;">
                     <div style="font-size:13px;font-weight:700;color:var(--gray-color);margin-bottom:8px;"><i class="fa-solid fa-paw"></i> بيانات الحيوان الأليف (اختياري):</div>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -755,16 +824,36 @@
                 <button class="btn-close-modal" onclick="closeCartModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="cart-items-list" id="cartItemsList"></div>
+            
+            <!-- وجهة التوصيل وتحديد السعر حسب المسافة من شكري القواتلي -->
             <div class="form-group">
-                <label><i class="fa-solid fa-truck"></i> منطقة التوصيل:</label>
+                <label><i class="fa-solid fa-truck"></i> وجهة التوصيل (من مقرنا بشارع شكري القواتلي):</label>
                 <select class="form-select" id="shippingArea" onchange="updateCartTotals()">
-                    <option value="0">استلام من المحل (مجاناً)</option>
-                    <option value="15">وسط المحلة الكبرى - 15 ج.م</option>
-                    <option value="25">أطراف المحلة - 25 ج.م</option>
-                    <option value="35">خارج المحلة (قرى مجاورة) - 35 ج.م</option>
-                    <option value="50">مناطق بعيدة - 50 ج.م</option>
+                    <option value="0">استلام من مقر المحل (شارع شكري القواتلي) - مجاناً</option>
+                    <option value="10">نطاق شكري القواتلي والمحطة والقريب (أقل من 1 كم) - 10 ج.م</option>
+                    <option value="15">وسط المحلة (الشون، الحنفي، المنشية، سكة زفتى) (1-2 كم) - 15 ج.م</option>
+                    <option value="20">أحياء المحلة (الشعبية، أبو شاهين، الرجبية، صندفا، الجمهورية) (2-4 كم) - 20 ج.م</option>
+                    <option value="25">أطراف المحلة (محلة البرج، الدواخلية، الوراقة، سكة طنطا) (4-6 كم) - 25 ج.م</option>
+                    <option value="35">ضواحي المحلة وقرى قريبة (الهياتم، منشية البكري، السجاعية) (6-9 كم) - 35 ج.م</option>
+                    <option value="50">قرى مركز المحلة البعيدة (بشبيش، دمرو، ميت حبيب، العامرية) (10+ كم) - 50 ج.م</option>
                 </select>
+                <div id="shippingAutoDetectedNote" style="font-size:11.5px;color:var(--accent-color);font-weight:700;display:none;margin-top:2px;">
+                    <i class="fa-solid fa-location-crosshairs"></i> تم تحديد تكلفة التوصيل تلقائياً حسب بُعد عنوانك عن شكري القواتلي ✅
+                </div>
             </div>
+
+            <!-- شريط عرض سريع: تريتس مكافآت أليفك (35 ج.م) -->
+            <div class="cart-upsell-banner" id="cartUpsellBanner">
+                <div class="upsell-info">
+                    <span class="upsell-icon">🍖</span>
+                    <div class="upsell-text">
+                        <strong>دلّع أليفك بـ 35 ج.م فقط!</strong>
+                        <span>أضف تريتس ومكافآت لذيذة للسلة بضغطة واحدة 🐾</span>
+                    </div>
+                </div>
+                <button class="btn-upsell-add" onclick="addTreatsUpsell()"><i class="fa-solid fa-plus"></i> أضف (35 ج)</button>
+            </div>
+
             <div class="cart-total-box">
                 <div class="cart-total-row"><span>المنتجات والخدمات:</span><span id="modalSubtotal">0 ج.م</span></div>
                 <div class="cart-total-row"><span>مصاريف الشحن:</span><span id="modalShipping">0 ج.م</span></div>
@@ -914,7 +1003,9 @@
             let user = db[phone];
             if (user) { user.name = name; user.address = address; user.petName = petName; user.petType = petType; user.petAge = petAge; alert(`أهلاً بعودتك يا ${name}! تم تحديث بيانات حسابك بنجاح ✅`); }
             else { user = { name, phone, address, petName, petType, petAge, createdAt: new Date().toISOString() }; }
-            setCurrentUser(user); closeAuthModal();
+            setCurrentUser(user);
+            autoApplyShippingZone();
+            closeAuthModal();
         }
         function editProfile() { closeProfileModal(); openAuthModal(); }
         function logoutUser() { if (confirm('هل تريد تسجيل الخروج وتبديل الحساب؟')) { setCurrentUser(null); closeProfileModal(); openAuthModal(); } }
@@ -1081,20 +1172,107 @@
             saveCart(); closeBookingModal(); updateCart();
         }
 
-        // === Cart Modal ===
-        function openCartModal() { if (cart.length === 0) return; renderCartModal(); document.getElementById('cartModal').classList.add('active'); }
-        function closeCartModal() { document.getElementById('cartModal').classList.remove('active'); }
+        // === Cart Modal & Automatic Distance Shipping ===
+        const TREATS_NAME = 'تريتس مكافآت للحيوانات الأليفة';
+        const TREATS_PRICE = 35;
+
+        function detectShippingZoneFromAddress(address) {
+            if (!address) return null;
+            const a = address.toLowerCase();
+
+            // 1. نطاق شكري القواتلي والمحطة والقريب (أقل من 1 كم) -> 10 ج.م
+            if (a.includes('شكري') || a.includes('القولتي') || a.includes('القواتلي') || a.includes('المحطة') || a.includes('بنزايون') || a.includes('الإسعاف') || a.includes('شارع البحر')) {
+                return "10";
+            }
+            // 2. وسط المحلة (1-2 كم) -> 15 ج.م
+            if (a.includes('الشون') || a.includes('الحنفي') || a.includes('المنشية') || a.includes('سكة زفتى') || a.includes('العباسي') || a.includes('البندر') || a.includes('سوق الجمعة')) {
+                return "15";
+            }
+            // 3. أحياء المحلة المتوسطة (2-4 كم) -> 20 ج.م
+            if (a.includes('الشعبية') || a.includes('أبو شاهين') || a.includes('شاهين') || a.includes('الرجبية') || a.includes('صندفا') || a.includes('الجمهورية') || a.includes('الجيش') || a.includes('الزهراء')) {
+                return "20";
+            }
+            // 4. أطراف المحلة (4-6 كم) -> 25 ج.م
+            if (a.includes('البرج') || a.includes('محلة البرج') || a.includes('الدواخلية') || a.includes('الوراقة') || a.includes('النحاسين') || a.includes('سكة طنطا') || a.includes('الهواشم') || a.includes('عنان')) {
+                return "25";
+            }
+            // 5. ضواحي وقرى قريبة (6-9 كم) -> 35 ج.م
+            if (a.includes('الهياتم') || a.includes('البكري') || a.includes('السجاعية') || a.includes('بطينة') || a.includes('دنوشر') || a.includes('صفط')) {
+                return "35";
+            }
+            // 6. قرى بعيدة (10+ كم) -> 50 ج.م
+            if (a.includes('بشبيش') || a.includes('دمرو') || a.includes('ميت حبيب') || a.includes('العامرية') || a.includes('المعتمدية') || a.includes('الجنينة') || a.includes('سامول')) {
+                return "50";
+            }
+            return null;
+        }
+
+        function autoApplyShippingZone() {
+            const user = getCurrentUser();
+            const sel = document.getElementById('shippingArea');
+            const note = document.getElementById('shippingAutoDetectedNote');
+            if (!sel) return;
+
+            if (user && user.address) {
+                const detected = detectShippingZoneFromAddress(user.address);
+                if (detected) {
+                    sel.value = detected;
+                    if (note) note.style.display = 'block';
+                    return;
+                }
+            }
+            if (note) note.style.display = 'none';
+        }
+
+        function addTreatsUpsell() {
+            const existing = cart.find(i => i.name === TREATS_NAME && !i.isService);
+            if (existing) {
+                existing.qty = (existing.qty || 1) + 1;
+            } else {
+                cart.push({
+                    name: TREATS_NAME,
+                    price: TREATS_PRICE,
+                    qty: 1,
+                    isService: false
+                });
+            }
+            saveCart();
+            updateCart();
+            renderCartModal();
+        }
+
+        function openCartModal() {
+            if (cart.length === 0) return;
+            autoApplyShippingZone();
+            renderCartModal();
+            document.getElementById('cartModal').classList.add('active');
+        }
+
+        function closeCartModal() {
+            document.getElementById('cartModal').classList.remove('active');
+        }
 
         function renderCartModal() {
-            const list = document.getElementById('cartItemsList'); list.innerHTML = '';
+            const list = document.getElementById('cartItemsList');
+            list.innerHTML = '';
+
             cart.forEach((item, index) => {
-                const qty = item.qty || 1, row = document.createElement('div');
+                const qty = item.qty || 1;
+                const row = document.createElement('div');
                 row.className = 'cart-item-row';
                 let metaHtml = item.isService && item.time ? `<div class="meta"><i class="fa-regular fa-clock"></i> الموعد: ${item.date} (${item.time})</div>` : '';
                 let qtyHtml = !item.isService ? `<div class="qty-controls"><button class="qty-btn" onclick="changeQty(${index},-1)">−</button><span class="qty-val">${qty}</span><button class="qty-btn" onclick="changeQty(${index},1)">+</button></div>` : '';
                 row.innerHTML = `<div class="cart-item-details"><div class="title">${item.name}</div>${metaHtml}${qtyHtml}</div><div class="cart-item-right"><div class="price">${item.price * qty} ج.م</div><button class="btn-remove-item" onclick="removeItem(${index})" title="حذف"><i class="fa-solid fa-trash-can"></i></button></div>`;
                 list.appendChild(row);
             });
+
+            // إخفاء أو إظهار شريط عرض التريتس (35 ج.م) إذا كان موجوداً بالسلة
+            const hasTreats = cart.some(i => i.name === TREATS_NAME && !i.isService);
+            const upsellBanner = document.getElementById('cartUpsellBanner');
+            if (upsellBanner) {
+                upsellBanner.style.display = hasTreats ? 'none' : 'flex';
+            }
+
             updateCartTotals();
         }
 
@@ -1522,6 +1700,7 @@
             loadCart();
             checkReorder();
             renderSmartReminders();
+            autoApplyShippingZone();
             if (!getCurrentUser()) setTimeout(() => openAuthModal(), 500);
         });
     </script>
