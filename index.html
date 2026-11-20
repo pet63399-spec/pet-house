@@ -477,6 +477,27 @@
             color: var(--gray-color);
             font-weight: 600;
         }
+        .footer-branches {
+            background: var(--slot-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            text-align: right;
+            font-size: 12.5px;
+            margin-top: 4px;
+        }
+        .branch-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-color);
+        }
+        .branch-item strong {
+            color: var(--primary-color);
+        }
     </style>
 </head>
 <body>
@@ -824,8 +845,20 @@
                     <span>تيك توك</span>
                 </a>
             </div>
+            <!-- عناوين فروعنا في المحلة الكبرى -->
+            <div class="footer-branches">
+                <div class="branch-item">
+                    <i class="fa-solid fa-location-dot" style="color:var(--accent-color);font-size:15px;"></i>
+                    <span><strong>الفرع الأول:</strong> شارع شكري القواتلي (خلف البنك العربي الأفريقي)</span>
+                </div>
+                <div class="branch-item">
+                    <i class="fa-solid fa-location-dot" style="color:var(--blue-color);font-size:15px;"></i>
+                    <span><strong>الفرع الثاني:</strong> الشعبية (أمام سكاي توب مول)</span>
+                </div>
+            </div>
+
             <div class="footer-copy">
-                📍 المحلة الكبرى - شارع شكري القواتلي | 🐾 PET HOUSE
+                🐾 PET HOUSE | يسعدنا تشريفكم وزيارتكم في فروعنا بالمحلة الكبرى
             </div>
         </footer>
 
@@ -923,8 +956,8 @@
             <div class="form-group">
                 <label><i class="fa-solid fa-truck"></i> وجهة التوصيل (من مقرنا بشارع شكري القواتلي):</label>
                 <select class="form-select" id="shippingArea" onchange="updateCartTotals()">
-                    <option value="0">استلام من مقر المحل (شارع شكري القواتلي) - مجاناً</option>
-                    <option value="25">نطاق شكري القواتلي والمحطة والقريب (أقل من 1 كم) - 25 ج.م</option>
+                    <option value="0">استلام من الفروع (شكري القواتلي أو الشعبية) - مجاناً</option>
+                    <option value="25">نطاق شكري القواتلي (خلف البنك العربي الأفريقي) والقريب - 25 ج.م</option>
                     <option value="30">وسط المحلة (الشون، الحنفي، المنشية، سكة زفتى) (1-2 كم) - 30 ج.م</option>
                     <option value="35">أحياء المحلة (الشعبية، أبو شاهين، الرجبية، صندفا، الجمهورية) (2-4 كم) - 35 ج.م</option>
                     <option value="40">أطراف المحلة (محلة البرج، الدواخلية، الوراقة، سكة طنطا) (4-6 كم) - 40 ج.م</option>
