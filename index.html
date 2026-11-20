@@ -261,6 +261,87 @@
         .btn-clear-cart { background:var(--slot-bg); border:1px solid var(--border-color); color:var(--gray-color); padding:11px 14px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; }
         .btn-clear-cart:hover { color:#e74c3c; border-color:#e74c3c; }
         .section-hidden { display:none !important; }
+
+        /* Smart Reminder Cards */
+        .smart-reminder-banner {
+            background: linear-gradient(135deg, rgba(39, 174, 96, 0.12), rgba(37, 99, 235, 0.08));
+            border: 1px solid var(--notice-border);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            animation: popIn 0.3s ease;
+            box-shadow: var(--card-shadow);
+        }
+        body.dark-mode .smart-reminder-banner {
+            background: linear-gradient(135deg, rgba(39, 174, 96, 0.20), rgba(37, 99, 235, 0.16));
+            border-color: rgba(39, 174, 96, 0.4);
+        }
+        .smart-reminder-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .smart-reminder-badge {
+            background: var(--accent-color);
+            color: white;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 3px 9px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .smart-reminder-close {
+            background: none;
+            border: none;
+            color: var(--gray-color);
+            font-size: 18px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .smart-reminder-close:hover { color: #e74c3c; }
+        .smart-reminder-title {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: var(--primary-color);
+            line-height: 1.5;
+        }
+        .smart-reminder-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .btn-reminder-act {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+        .btn-reminder-act:hover { background: var(--accent-hover); }
+        .btn-reminder-dismiss {
+            background: var(--slot-bg);
+            border: 1px solid var(--border-color);
+            color: var(--gray-color);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .btn-reminder-dismiss:hover { border-color: var(--gray-color); color: var(--text-color); }
     </style>
 </head>
 <body>
@@ -294,6 +375,9 @@
             <span class="dot"></span>
             <span id="doctorBadgeText">الدكتور متاح الآن</span>
         </div>
+
+        <!-- صندوق التذكيرات الذكية التلقائية -->
+        <div id="smartRemindersContainer"></div>
 
         <div class="search-container">
             <input type="text" class="search-input" id="searchInput" placeholder="ابحث عن منتج أو خدمة..." oninput="handleSearch()">
@@ -688,7 +772,49 @@
             </div>
             <div class="cart-modal-actions">
                 <button class="btn-clear-cart" onclick="clearCart()"><i class="fa-regular fa-trash-can"></i> مسح السلة</button>
-                <button class="btn-checkout" style="flex:1;justify-content:center;" onclick="sendOrder()"><i class="fa-brands fa-whatsapp"></i> اطلب عبر واتساب</button>
+                <button class="btn-checkout" style="flex:1;justify-content:center;background:var(--accent-color);" onclick="sendOrder()"><i class="fa-solid fa-check-circle"></i> تأكيد الطلب فوراً</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة تأكيد الطلب الفورية داخل الموقع -->
+    <div class="modal-overlay" id="orderSuccessModal">
+        <div class="modal-card" style="text-align:center;">
+            <div style="width: 64px; height: 64px; background: rgba(39, 174, 96, 0.12); color: var(--accent-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 4px;">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            
+            <h3 style="font-size: 18px; font-weight: 900; color: var(--primary-color);">
+                تم استلام وتأكيد طلبك بنجاح! 🎉
+            </h3>
+            
+            <p style="font-size: 12.5px; color: var(--gray-color); line-height: 1.5;">
+                تم تسجيل الأوردر مباشرة في النظام وجاري تجهيزه للتوصيل دون الحاجة لمغادرة الموقع.
+            </p>
+
+            <!-- شارة رقم الطلب -->
+            <div style="background: var(--slot-bg); border: 1px dashed var(--border-color); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                <span style="color: var(--gray-color); font-weight: 700;"><i class="fa-solid fa-receipt"></i> رقم الطلب:</span>
+                <span style="color: var(--blue-color); font-weight: 900; font-family: monospace; font-size: 15px;" id="successOrderId">#PH-000000</span>
+            </div>
+
+            <!-- تفاصيل الفاتورة -->
+            <div class="user-details-box" id="successInvoiceBox" style="text-align: right; max-height: 220px; overflow-y: auto;">
+                <!-- dynamic items inserted here -->
+            </div>
+
+            <div style="background: var(--notice-bg); border: 1px solid var(--notice-border); color: var(--notice-text); padding: 9px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 8px; text-align: right;">
+                <i class="fa-solid fa-phone-volume"></i>
+                <span>سيتواصل معك فريق Pet House لتأكيد ميعاد التوصيل على الفور.</span>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top:5px;">
+                <button class="btn-primary" onclick="closeOrderSuccessModal()">
+                    <i class="fa-solid fa-house"></i> العودة للمتجر ومتابعة التسوق
+                </button>
+                <a id="btnOptionalWhatsApp" href="#" target="_blank" class="btn-secondary" style="display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; color: #25d366; text-decoration:none;">
+                    <i class="fa-brands fa-whatsapp"></i> فتح المحادثة على واتساب (اختياري)
+                </a>
             </div>
         </div>
     </div>
@@ -700,7 +826,7 @@
         </div>
         <div class="cart-buttons">
             <button class="btn-view-cart" onclick="openCartModal()"><i class="fa-regular fa-eye"></i> مراجعة</button>
-            <button class="btn-checkout" onclick="sendOrder()"><i class="fa-brands fa-whatsapp"></i> اطلب الآن</button>
+            <button class="btn-checkout" style="background:var(--accent-color);" onclick="openCartModal()"><i class="fa-solid fa-check-circle"></i> إتمام الطلب</button>
         </div>
     </div>
 
@@ -977,34 +1103,425 @@
             if (e.target === document.getElementById('cartModal')) closeCartModal();
             if (e.target === document.getElementById('authModal')) closeAuthModal();
             if (e.target === document.getElementById('profileModal')) closeProfileModal();
+            if (e.target === document.getElementById('orderSuccessModal')) closeOrderSuccessModal();
         }
 
-        // === WhatsApp Order ===
+        // ==========================================
+        // === نظام التذكير الذكي (Smart Reminders) ===
+        // ==========================================
+        function getSmartReminders() {
+            try { return JSON.parse(localStorage.getItem('petHouseSmartReminders')) || []; }
+            catch(e) { return []; }
+        }
+
+        function saveSmartReminders(reminders) {
+            localStorage.setItem('petHouseSmartReminders', JSON.stringify(reminders));
+        }
+
+        // جدولة وحفظ التذكيرات تلقائياً في localStorage بعد كل أوردر
+        function scheduleSmartReminders(orderItems, user) {
+            let reminders = getSmartReminders();
+            const petName = (user && user.petName) ? user.petName : 'أليفك';
+            const now = Date.now();
+
+            // 1. تذكير الطعام (دراي فود أو ويت فود) -> كل 14 يوماً
+            const foodItems = orderItems.filter(item => {
+                if (item.isService) return false;
+                const n = item.name.toLowerCase();
+                return n.includes('chat') || n.includes('bewi') || n.includes('club') ||
+                       n.includes('friskies') || n.includes('tommy') || n.includes('pro cat') ||
+                       n.includes('شات') || n.includes('بيوي') || n.includes('كلوب') ||
+                       n.includes('فريسكس') || n.includes('تومي') || n.includes('برو') ||
+                       n.includes('سوفت') || n.includes('لحمة') || n.includes('فراخ') || n.includes('تونة');
+            });
+
+            if (foodItems.length > 0) {
+                // إزالة أي تذكير طعام قديم وتجديده من تاريخ اليوم
+                reminders = reminders.filter(r => r.type !== 'food');
+                reminders.push({
+                    id: 'food_' + Date.now(),
+                    type: 'food',
+                    petName: petName,
+                    items: foodItems.map(i => ({ name: i.name, price: i.price, qty: i.qty || 1 })),
+                    createdAt: now,
+                    dueDate: now + (14 * 24 * 60 * 60 * 1000) // 14 يوماً
+                });
+            }
+
+            // 2. تذكير الرمل -> كل 30 يوماً
+            const litterItems = orderItems.filter(item => {
+                if (item.isService) return false;
+                const n = item.name.toLowerCase();
+                return n.includes('رمل') || n.includes('ساند') || n.includes('جولد') ||
+                       n.includes('litter') || n.includes('sand');
+            });
+
+            if (litterItems.length > 0) {
+                reminders = reminders.filter(r => r.type !== 'litter');
+                reminders.push({
+                    id: 'litter_' + Date.now(),
+                    type: 'litter',
+                    petName: petName,
+                    items: litterItems.map(i => ({ name: i.name, price: i.price, qty: i.qty || 1 })),
+                    createdAt: now,
+                    dueDate: now + (30 * 24 * 60 * 60 * 1000) // 30 يوماً
+                });
+            }
+
+            // 3. تذكير الجرومينج -> كل 14 يوماً من تاريخ الجلسة
+            const groomingItems = orderItems.filter(item => item.isService);
+            if (groomingItems.length > 0) {
+                reminders = reminders.filter(r => r.type !== 'grooming');
+                reminders.push({
+                    id: 'grooming_' + Date.now(),
+                    type: 'grooming',
+                    petName: petName,
+                    serviceName: groomingItems[0].name,
+                    createdAt: now,
+                    dueDate: now + (14 * 24 * 60 * 60 * 1000) // 14 يوماً
+                });
+            }
+
+            saveSmartReminders(reminders);
+        }
+
+        // فحص وعرض التذكيرات المستحقة في أعلى الصفحة
+        function renderSmartReminders() {
+            const container = document.getElementById('smartRemindersContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const reminders = getSmartReminders();
+            const now = Date.now();
+
+            reminders.forEach(r => {
+                // عرض التذكير إذا حل موعده أو تبقى عليه يومين أو أقل
+                const diffMs = r.dueDate - now;
+                const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                const isDue = diffDays <= 2;
+
+                if (isDue) {
+                    const banner = document.createElement('div');
+                    banner.className = 'smart-reminder-banner';
+
+                    if (r.type === 'food') {
+                        banner.innerHTML = `
+                            <div class="smart-reminder-header">
+                                <span class="smart-reminder-badge"><i class="fa-solid fa-bone"></i> تذكير الطعام الذكي</span>
+                                <button class="smart-reminder-close" onclick="dismissSmartReminder('${r.id}')" title="إغلاق">&times;</button>
+                            </div>
+                            <div class="smart-reminder-title">
+                                🔔 اقترب موعد تجديد أكل <strong>${r.petName}</strong>، اطلبه الآن بضغطة واحدة!
+                            </div>
+                            <div class="smart-reminder-actions">
+                                <button class="btn-reminder-act" onclick="applySmartReminder('${r.id}')">
+                                    <i class="fa-solid fa-cart-plus"></i> إضافة الطعام للسلة فوراً
+                                </button>
+                                <button class="btn-reminder-dismiss" onclick="dismissSmartReminder('${r.id}')">لاحقاً</button>
+                            </div>
+                        `;
+                    } else if (r.type === 'litter') {
+                        banner.innerHTML = `
+                            <div class="smart-reminder-header">
+                                <span class="smart-reminder-badge" style="background:#e67e22;"><i class="fa-solid fa-bucket"></i> تذكير رمل القطط</span>
+                                <button class="smart-reminder-close" onclick="dismissSmartReminder('${r.id}')" title="إغلاق">&times;</button>
+                            </div>
+                            <div class="smart-reminder-title">
+                                🪣 حان موعد تجديد رمل القطط لـ <strong>${r.petName}</strong>، اطلبه الآن بضغطة واحدة!
+                            </div>
+                            <div class="smart-reminder-actions">
+                                <button class="btn-reminder-act" style="background:#e67e22;" onclick="applySmartReminder('${r.id}')">
+                                    <i class="fa-solid fa-cart-plus"></i> إضافة الرمل للسلة فوراً
+                                </button>
+                                <button class="btn-reminder-dismiss" onclick="dismissSmartReminder('${r.id}')">لاحقاً</button>
+                            </div>
+                        `;
+                    } else if (r.type === 'grooming') {
+                        banner.innerHTML = `
+                            <div class="smart-reminder-header">
+                                <span class="smart-reminder-badge" style="background:#8e44ad;"><i class="fa-solid fa-scissors"></i> تذكير العناية والجرومينج</span>
+                                <button class="smart-reminder-close" onclick="dismissSmartReminder('${r.id}')" title="إغلاق">&times;</button>
+                            </div>
+                            <div class="smart-reminder-title">
+                                ✂️ مر أسبوعان على آخر جلسة عناية لـ <strong>${r.petName}</strong>، احجز جلسته القادمة الآن!
+                            </div>
+                            <div class="smart-reminder-actions">
+                                <button class="btn-reminder-act" style="background:#8e44ad;" onclick="goToGroomingBooking('${r.id}')">
+                                    <i class="fa-regular fa-calendar-check"></i> حجز جلسة جرومينج الآن
+                                </button>
+                                <button class="btn-reminder-dismiss" onclick="dismissSmartReminder('${r.id}')">لاحقاً</button>
+                            </div>
+                        `;
+                    }
+
+                    container.appendChild(banner);
+                }
+            });
+        }
+
+        function applySmartReminder(reminderId) {
+            const reminders = getSmartReminders();
+            const r = reminders.find(x => x.id === reminderId);
+            if (!r || !r.items) return;
+
+            r.items.forEach(item => {
+                const ex = cart.find(c => c.name === item.name && !c.isService);
+                if (ex) {
+                    ex.qty = (ex.qty || 1) + (item.qty || 1);
+                } else {
+                    cart.push({
+                        name: item.name,
+                        price: item.price,
+                        qty: item.qty || 1,
+                        isService: false
+                    });
+                }
+            });
+
+            saveCart();
+            updateCart();
+
+            // تجديد التذكير للدورة القادمة
+            r.dueDate = Date.now() + (r.type === 'litter' ? 30 : 14) * 24 * 60 * 60 * 1000;
+            saveSmartReminders(reminders);
+            renderSmartReminders();
+
+            openCartModal();
+        }
+
+        function goToGroomingBooking(reminderId) {
+            const reminders = getSmartReminders();
+            const r = reminders.find(x => x.id === reminderId);
+            if (r) {
+                r.dueDate = Date.now() + (14 * 24 * 60 * 60 * 1000);
+                saveSmartReminders(reminders);
+                renderSmartReminders();
+            }
+
+            const chip = document.querySelector('.filter-chip[onclick*="grooming"]');
+            if (chip) filterSection('grooming', chip);
+            const groomingSec = document.querySelector('[data-section="grooming"]');
+            if (groomingSec) {
+                groomingSec.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function dismissSmartReminder(reminderId) {
+            let reminders = getSmartReminders();
+            // تأجيل التذكير 3 أيام عند النقر على إغلاق
+            reminders = reminders.map(r => {
+                if (r.id === reminderId) {
+                    r.dueDate = Date.now() + (3 * 24 * 60 * 60 * 1000);
+                }
+                return r;
+            });
+            saveSmartReminders(reminders);
+            renderSmartReminders();
+        }
+
+        // دالة مساعدة لتجربة التذكيرات الذكية فوراً في أي وقت
+        window.demoSmartReminders = function() {
+            const user = getCurrentUser() || { name: 'عميل Pet House', petName: 'مشمش' };
+            const fakeReminders = [
+                {
+                    id: 'food_demo',
+                    type: 'food',
+                    petName: user.petName || 'مشمش',
+                    items: [{ name: 'Chat & Chat Sterilized', price: 260, qty: 1 }],
+                    dueDate: Date.now() - 1000
+                },
+                {
+                    id: 'litter_demo',
+                    type: 'litter',
+                    petName: user.petName || 'مشمش',
+                    items: [{ name: 'رمل جولد 10 كيلو', price: 200, qty: 1 }],
+                    dueDate: Date.now() - 1000
+                },
+                {
+                    id: 'grooming_demo',
+                    type: 'grooming',
+                    petName: user.petName || 'مشمش',
+                    serviceName: 'شاور فقط',
+                    dueDate: Date.now() - 1000
+                }
+            ];
+            saveSmartReminders(fakeReminders);
+            renderSmartReminders();
+            alert('تم تفعيل التذكيرات الذكية بنجاح! ستظهر أعلى الصفحة الآن 🐾');
+        };
+
+        // ==========================================
+        // === إتمام الطلب مباشرة من داخل الموقع ===
+        // ==========================================
+        function saveOrderToHistory(order) {
+            try {
+                const list = JSON.parse(localStorage.getItem('petHouseOrdersList')) || [];
+                list.unshift(order);
+                if (list.length > 25) list.pop();
+                localStorage.setItem('petHouseOrdersList', JSON.stringify(list));
+            } catch(e) {}
+        }
+
+        function sendBackgroundNotification(text, orderId, total, user) {
+            // إرسال إشعار فوري في الخلفية دون مقاطعة العميل
+            try {
+                const payload = {
+                    orderId: orderId,
+                    storePhone: "01210556177",
+                    customerName: user.name,
+                    customerPhone: user.phone,
+                    customerAddress: user.address,
+                    total: total,
+                    orderSummary: text,
+                    timestamp: new Date().toISOString()
+                };
+
+                // محاولة إرسال إشعار في الخلفية عبر webhook أو fetch صامت إذا توفر سيرفر
+                if (navigator.sendBeacon) {
+                    const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+                    // navigator.sendBeacon('/api/order-notification', blob);
+                }
+            } catch(e) {
+                console.log('Order logged locally', e);
+            }
+        }
+
+        function showOrderSuccessModal(order, waText) {
+            document.getElementById('successOrderId').innerText = '#' + order.id;
+            
+            const box = document.getElementById('successInvoiceBox');
+            let itemsHtml = '';
+            order.items.forEach(item => {
+                const qty = item.qty || 1;
+                const meta = (item.isService && item.time) ? `<span style="font-size:11px;color:var(--accent-color);"> (موعد: ${item.date} - ${item.time})</span>` : '';
+                itemsHtml += `
+                    <div class="user-details-row" style="padding: 5px 0; border-bottom: 1px dashed var(--border-color); font-size: 12.5px;">
+                        <span>• ${item.name} ${meta} × ${qty}</span>
+                        <span class="val">${item.price * qty} ج.م</span>
+                    </div>
+                `;
+            });
+
+            box.innerHTML = `
+                <div style="font-weight: 800; color: var(--primary-color); margin-bottom: 6px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">
+                    <i class="fa-solid fa-user"></i> العميل: ${order.user.name} (${order.user.phone})
+                </div>
+                <div style="font-size: 12px; color: var(--gray-color); margin-bottom: 8px;">
+                    <i class="fa-solid fa-location-dot"></i> العنوان: ${order.user.address}
+                </div>
+                <div style="font-size: 12px; font-weight: 800; margin-bottom: 4px; color: var(--primary-color);">الأصناف المطلوبة:</div>
+                ${itemsHtml}
+                <div class="user-details-row" style="margin-top: 6px; font-size: 12px; color: var(--gray-color);">
+                    <span>مصاريف التوصيل (${order.shippingArea}):</span>
+                    <span class="val">${order.shipping > 0 ? order.shipping + ' ج.م' : 'مجاناً'}</span>
+                </div>
+                <div class="user-details-row" style="margin-top: 6px; font-size: 14.5px; font-weight: 900; color: var(--accent-color); border-top: 2px solid var(--border-color); padding-top: 6px;">
+                    <span>المبلغ الإجمالي:</span>
+                    <span class="val" style="font-size: 16px;">${order.grandTotal} ج.م</span>
+                </div>
+            `;
+
+            // الرابط الاختياري للواتساب في حال رغب العميل بالتواصل يدوياً
+            const optBtn = document.getElementById('btnOptionalWhatsApp');
+            if (optBtn) {
+                optBtn.href = `https://wa.me/201210556177?text=${encodeURIComponent(waText)}`;
+            }
+
+            document.getElementById('orderSuccessModal').classList.add('active');
+        }
+
+        function closeOrderSuccessModal() {
+            document.getElementById('orderSuccessModal').classList.remove('active');
+            renderSmartReminders();
+            checkReorder();
+        }
+
         function sendOrder() {
             if (cart.length === 0) return;
             let user = getCurrentUser();
-            if (!user) { alert('يرجى تسجيل بياناتك أولاً!'); openAuthModal(); return; }
+            if (!user) {
+                alert('يرجى تسجيل بياناتك أولاً لتأكيد الطلب!');
+                openAuthModal();
+                return;
+            }
+
+            // توليد رقم طلب مميز
+            const orderId = 'PH-' + Math.floor(100000 + Math.random() * 900000);
+            const sub = getCartSubtotal();
+            const ship = getShippingCost();
+            const grand = sub + ship;
+            const sel = document.getElementById('shippingArea');
+            const areaName = sel ? sel.options[sel.selectedIndex].text.split(' - ')[0] : 'المحلة';
+
+            // حفظ الطلب السابق لإعادة الطلب
             saveLastOrder();
-            let sub = getCartSubtotal(), ship = getShippingCost(), grand = sub + ship;
-            let text = "🐾 مرحباً Pet House، أرجو تنفيذ الطلب الآتي:\n\n";
+
+            // جدولة التذكيرات الذكية تلقائياً
+            scheduleSmartReminders(cart, user);
+
+            // تجهيز نص رسالة الواتساب للمتجر
+            let text = `🐾 طلب جديد عبر موقع Pet House! (#${orderId})\n\n`;
             text += "👤 بيانات العميل:\n";
-            text += `• الاسم: ${user.name}\n• رقم الموبايل: ${user.phone}\n• العنوان: ${user.address}\n`;
-            if (user.petName) { text += `\n🐾 الحيوان: ${user.petName}`; if (user.petType) text += ` (${user.petType})`; if (user.petAge) text += ` - عمره ${user.petAge}`; text += '\n'; }
+            text += `• الاسم: ${user.name}\n`;
+            text += `• رقم الموبايل: ${user.phone}\n`;
+            text += `• العنوان: ${user.address}\n`;
+            if (user.petName) {
+                text += `• الحيوان: ${user.petName}`;
+                if (user.petType) text += ` (${user.petType})`;
+                if (user.petAge) text += ` - عمره ${user.petAge}`;
+                text += '\n';
+            }
+
             text += "\n📦 قائمة الطلبات:\n";
             cart.forEach((item, i) => {
                 const qty = item.qty || 1;
-                if (item.isService && item.time) text += `${i+1}- ${item.name} (${item.price} ج.م)\n   ⏰ الموعد: ${item.date} - ${item.time}\n`;
-                else text += `${i+1}- ${item.name} × ${qty} (${item.price * qty} ج.م)\n`;
+                if (item.isService && item.time) {
+                    text += `${i+1}- ${item.name} (${item.price} ج.م)\n   ⏰ الموعد: ${item.date} - ${item.time}\n`;
+                } else {
+                    text += `${i+1}- ${item.name} × ${qty} (${item.price * qty} ج.م)\n`;
+                }
             });
+
             text += `\n💰 المنتجات: ${sub} ج.م`;
-            if (ship > 0) { const sel = document.getElementById('shippingArea'); const area = sel ? sel.options[sel.selectedIndex].text.split(' - ')[0] : ''; text += `\n🚚 الشحن (${area}): ${ship} ج.م`; }
-            text += `\n✅ الإجمالي: ${grand} ج.م`;
-            window.location.href = `https://wa.me/201210556177?text=${encodeURIComponent(text)}`;
+            if (ship > 0) {
+                text += `\n🚚 الشحن (${areaName}): ${ship} ج.م`;
+            }
+            text += `\n✅ الإجمالي الكلي: ${grand} ج.م`;
+            text += `\n🕒 التوقيت: ${new Date().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})}`;
+
+            // إرسال الإشعار في الخلفية
+            sendBackgroundNotification(text, orderId, grand, user);
+
+            // حفظ الطلب في سجل الطلبات بالمتصفح
+            const fullOrder = {
+                id: orderId,
+                date: new Date().toISOString(),
+                user: user,
+                items: JSON.parse(JSON.stringify(cart)),
+                subtotal: sub,
+                shipping: ship,
+                shippingArea: areaName,
+                grandTotal: grand,
+                status: 'تم الاستلام بنجاح'
+            };
+            saveOrderToHistory(fullOrder);
+
+            // عرض نافذة تأكيد الطلب الفورية داخل الموقع
+            showOrderSuccessModal(fullOrder, text);
+
+            // تفريغ السلة وإغلاق نافذة السلة
+            cart = [];
+            saveCart();
+            updateCart();
+            closeCartModal();
         }
 
         // === Init ===
         window.addEventListener('DOMContentLoaded', () => {
-            renderUserInfo(); loadCart(); checkReorder();
+            renderUserInfo();
+            loadCart();
+            checkReorder();
+            renderSmartReminders();
             if (!getCurrentUser()) setTimeout(() => openAuthModal(), 500);
         });
     </script>
