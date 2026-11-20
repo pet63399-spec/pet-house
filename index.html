@@ -546,6 +546,7 @@
             <div class="filter-chip" onclick="filterSection('wet', this)">🥫 أكل رطب</div>
             <div class="filter-chip" onclick="filterSection('litter', this)">🪣 رمل قطط</div>
             <div class="filter-chip" onclick="filterSection('grooming', this)">✂️ جرومينج</div>
+            <div class="filter-chip" onclick="scrollToFoodGuide(this)">🐾 دليل الأطعمة</div>
         </div>
 
         <div class="reorder-banner" id="reorderBanner" style="display:none;">
@@ -825,6 +826,34 @@
                 </div>
             </div>
         </div>
+
+        <!-- قسم دليل الأطعمة الآمنة والممنوعة - Pet House -->
+        <section id="pet-food-guide" style="margin: 30px auto 15px; padding: 20px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--card-shadow); direction: rtl;">
+            <h3 style="text-align: center; color: var(--primary-color); font-size: 17px; font-weight: 800; margin-bottom: 6px;">🐾 دليل الأطعمة الآمنة والممنوعة</h3>
+            <p style="text-align: center; color: var(--gray-color); font-size: 13px; margin-bottom: 16px;">اكتب اسم أي طعام لتعرف فوراً هل هو آمن لقطتك أو كلبك</p>
+
+            <!-- اختيار نوع الحيوان -->
+            <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 14px;">
+                <button type="button" id="btn-pet-cat" onclick="setGuidePet('cat')" style="flex: 1; padding: 10px; border: 2px solid #ff7a00; background: #ff7a00; color: #fff; border-radius: 10px; font-weight: bold; font-size: 13px; cursor: pointer; font-family: inherit;">🐱 للقطط</button>
+                <button type="button" id="btn-pet-dog" onclick="setGuidePet('dog')" style="flex: 1; padding: 10px; border: 2px solid var(--border-color); background: var(--slot-bg); color: var(--text-color); border-radius: 10px; font-weight: bold; font-size: 13px; cursor: pointer; font-family: inherit;">🐶 للكلاب</button>
+            </div>
+
+            <!-- شريط البحث -->
+            <input type="text" id="foodSearchInput" oninput="searchPetFood()" placeholder="ابحث عن طعام (مثل: شوكولاتة، فراخ، تونة، لبن...)" style="width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1px solid var(--border-color); background: var(--slot-bg); color: var(--text-color); border-radius: 10px; font-size: 13.5px; outline: none; margin-bottom: 10px; font-family: inherit;">
+
+            <!-- أزرار سريعة لأشهر الأطعمة -->
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px;">
+                <button type="button" onclick="quickFoodSearch('شوكولاتة')" style="padding: 6px 12px; border: 1px solid var(--border-color); background: var(--slot-bg); color: var(--text-color); border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;">شوكولاتة</button>
+                <button type="button" onclick="quickFoodSearch('فراخ')" style="padding: 6px 12px; border: 1px solid var(--border-color); background: var(--slot-bg); color: var(--text-color); border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;">فراخ مسلوقة</button>
+                <button type="button" onclick="quickFoodSearch('لبن')" style="padding: 6px 12px; border: 1px solid var(--border-color); background: var(--slot-bg); color: var(--text-color); border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;">لبن</button>
+                <button type="button" onclick="quickFoodSearch('تونة')" style="padding: 6px 12px; border: 1px solid var(--border-color); background: var(--slot-bg); color: var(--text-color); border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;">تونة</button>
+                <button type="button" onclick="quickFoodSearch('عظام')" style="padding: 6px 12px; border: 1px solid var(--border-color); background: var(--slot-bg); color: var(--text-color); border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;">عظام مطبوخة</button>
+                <button type="button" onclick="quickFoodSearch('بيض')" style="padding: 6px 12px; border: 1px solid var(--border-color); background: var(--slot-bg); color: var(--text-color); border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;">بيض</button>
+            </div>
+
+            <!-- نتيجة البحث -->
+            <div id="foodGuideResult"></div>
+        </section>
 
         <!-- تذييل الصفحة / روابط التواصل الاجتماعي -->
         <footer class="social-footer">
@@ -1217,6 +1246,84 @@
             document.querySelectorAll('.section-block').forEach(b => {
                 b.classList.toggle('section-hidden', section !== 'all' && b.getAttribute('data-section') !== section);
             });
+        }
+
+        // === دليل الأطعمة الآمنة والممنوعة ===
+        let selectedGuidePet = 'cat';
+
+        const petFoodsDatabase = [
+            { keywords: ['شوكولاتة', 'شيكولاتة', 'كاكاو'], cat: { status: 'danger', title: '❌ ممنوع وسام جداً للقطط', note: 'تحتوي على الثيوبرومين والكافيين وتسبب تسمماً حاداً واضطرابات في القلب.' }, dog: { status: 'danger', title: '❌ ممنوع وسام جداً للكلاب', note: 'خطر جداً على القلب والجهاز العصبي وقد يسبب الوفاة حتى بكميات قليلة.' } },
+            { keywords: ['فراخ', 'دجاج', 'صدور'], cat: { status: 'safe', title: '✅ آمن ومفيد للقطط', note: 'يُقدّم مسلوقاً ومخلياً تماماً من العظام والجلد وبدون أي ملح أو توابل.' }, dog: { status: 'safe', title: '✅ آمن ومفيد للكلاب', note: 'ممتاز كوجبة صحية بشرط أن يكون مسلوقاً وبدون عظام مطبوخة أو بهارات.' } },
+            { keywords: ['لبن', 'حليب'], cat: { status: 'warning', title: '⚠️ بحذر (يسبب إسهال)', note: 'معظم القطط البالغة لا تهضم اللاكتوز فيسبب لها إسهالاً وغازات؛ يُفضّل اللبن الخالي من اللاكتوز.' }, dog: { status: 'warning', title: '⚠️ بكميات قليلة جداً', note: 'قد يسبب اضطرابات في المعدة وإسهالاً للكلاب الحساسة للاكتوز.' } },
+            { keywords: ['تونة', 'تونه'], cat: { status: 'warning', title: '⚠️ كمكافأة فقط وليس يومياً', note: 'التونة المعلبة للبشر تفتقر لعناصر أساسية للقطط وتحتوي على أملاح وزئبق؛ تُقدّم مرة أسبوعياً بكمية صغيرة.' }, dog: { status: 'warning', title: '⚠️ بكميات محدودة', note: 'يُفضّل التونة المحفوظة في الماء وليس الزيت وبكميات صغيرة.' } },
+            { keywords: ['عظام', 'عضم'], cat: { status: 'danger', title: '❌ العظام المطبوخة ممنوعة', note: 'العظام المطبوخة تتكسر وتسبب جروحاً أو انسداداً في المعدة والأمعاء.' }, dog: { status: 'danger', title: '❌ العظام المطبوخة خطرة جداً', note: 'تتشظى بسهولة وتسبب اختناقاً أو ثقباً في الجهاز الهضمي.' } },
+            { keywords: ['بصل', 'ثوم', 'توم'], cat: { status: 'danger', title: '❌ سام وممنوع تماماً', note: 'يدمر كرات الدم الحمراء ويسبب أنيميا حادة للقطط.' }, dog: { status: 'danger', title: '❌ سام وممنوع تماماً', note: 'يسبب تكسير كرات الدم الحمراء وتسمماً خطيراً للكلاب.' } },
+            { keywords: ['عنب', 'زبيب'], cat: { status: 'danger', title: '❌ ممنوع وخطر', note: 'قد يسبب فشلاً كلوياً حاداً.' }, dog: { status: 'danger', title: '❌ سام جداً للكلاب', note: 'يسبب فشلاً كلوياً مفاجئاً حتى بكميات صغيرة جداً.' } },
+            { keywords: ['بيض'], cat: { status: 'safe', title: '✅ آمن ومغذي (مطبوخ فقط)', note: 'البيض المسلوق جيداً مصدر ممتاز للبروتين، لكن البيض النيء ممنوع.' }, dog: { status: 'safe', title: '✅ آمن ومفيد (مسلوق)', note: 'مفيد جداً للشعر والمناعة بشرط أن يكون مسلوقاً بالكامل بدون زيت أو ملح.' } },
+            { keywords: ['بطاطس', 'بطاطا'], cat: { status: 'warning', title: '⚠️ مسلوقة فقط وبكمية صغيرة', note: 'البطاطس النيئة أو المقلية ممنوعة؛ المسلوقة بدون ملح آمنة بكمية صغيرة.' }, dog: { status: 'safe', title: '✅ آمنة (مسلوقة بدون إضافات)', note: 'مفيدة ومشبعة بشرط سلقها جيداً وتجنب البطاطس النيئة أو المقلية.' } },
+            { keywords: ['سمك', 'بلطي', 'بوري'], cat: { status: 'safe', title: '✅ آمن (مطبوخ ومنزوع الشوك)', note: 'يُمنع السمك النيء تماماً أو المحتوي على شوك أو ملح.' }, dog: { status: 'safe', title: '✅ آمن (مطبوخ وبدون شوك)', note: 'مصدر رائع للأوميجا 3 بشرط طهيه جيداً وإزالة الشوك بالكامل.' } },
+            { keywords: ['جبنة', 'جبنه', 'نستو'], cat: { status: 'warning', title: '⚠️ بكميات صغيرة جداً', note: 'يُفضّل الجبنة القريش غير المملحة؛ تجنب الجبن المطبوخ والمالح.' }, dog: { status: 'warning', title: '⚠️ بكمية صغيرة كـ مكافأة', note: 'الجبنة القريش قليلة الدسم والملح هي الخيار الأفضل.' } },
+            { keywords: ['موز', 'تفاح', 'بطيخ'], cat: { status: 'warning', title: '⚠️ قطع صغيرة بدون بذور', note: 'القطط آكلة لحوم ولا تحتاج الفواكه، لكن قطعة صغيرة من التفاح أو البطيخ بدون بذور آمنة.' }, dog: { status: 'safe', title: '✅ آمن ومفيد كـ سناك', note: 'رائع للكلاب بشرط إزالة البذور والقشور تماماً.' } }
+        ];
+
+        function scrollToFoodGuide(el) {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            if (el) el.classList.add('active');
+            document.querySelectorAll('.section-block').forEach(b => b.classList.remove('section-hidden'));
+            const guide = document.getElementById('pet-food-guide');
+            if (guide) guide.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function setGuidePet(pet) {
+            selectedGuidePet = pet;
+            const catBtn = document.getElementById('btn-pet-cat');
+            const dogBtn = document.getElementById('btn-pet-dog');
+            if (!catBtn || !dogBtn) return;
+            if (pet === 'cat') {
+                catBtn.style.background = '#ff7a00'; catBtn.style.color = '#fff'; catBtn.style.borderColor = '#ff7a00';
+                dogBtn.style.background = 'var(--slot-bg)'; dogBtn.style.color = 'var(--text-color)'; dogBtn.style.borderColor = 'var(--border-color)';
+            } else {
+                dogBtn.style.background = '#ff7a00'; dogBtn.style.color = '#fff'; dogBtn.style.borderColor = '#ff7a00';
+                catBtn.style.background = 'var(--slot-bg)'; catBtn.style.color = 'var(--text-color)'; catBtn.style.borderColor = 'var(--border-color)';
+            }
+            searchPetFood();
+        }
+
+        function quickFoodSearch(term) {
+            document.getElementById('foodSearchInput').value = term;
+            searchPetFood();
+        }
+
+        function searchPetFood() {
+            const input = document.getElementById('foodSearchInput');
+            if (!input) return;
+            const query = input.value.trim().toLowerCase();
+            const resultDiv = document.getElementById('foodGuideResult');
+            if (!resultDiv) return;
+            if (!query) {
+                resultDiv.innerHTML = '';
+                return;
+            }
+
+            const found = petFoodsDatabase.find(item => item.keywords.some(k => query.includes(k) || k.includes(query)));
+            if (!found) {
+                resultDiv.innerHTML = `<div style="padding: 12px; background: var(--slot-bg); border: 1px solid var(--border-color); border-radius: 10px; color: var(--gray-color); font-size: 13.5px; text-align: center;"><i class="fa-solid fa-circle-question"></i> لم نجد هذا الطعام في القائمة السريعة. تواصل معنا عبر الواتساب للتأكد قبل تقديمه لأليفك!</div>`;
+                return;
+            }
+
+            const info = found[selectedGuidePet];
+            const styles = {
+                safe: { bg: 'rgba(40, 167, 69, 0.12)', border: '#28a745', color: '#155724' },
+                warning: { bg: 'rgba(255, 193, 7, 0.15)', border: '#ffc107', color: '#856404' },
+                danger: { bg: 'rgba(220, 53, 69, 0.12)', border: '#dc3545', color: '#721c24' }
+            }[info.status];
+
+            resultDiv.innerHTML = `
+                <div style="padding: 14px; background: ${styles.bg}; border-right: 5px solid ${styles.border}; border-radius: 10px; color: ${styles.color};">
+                    <div style="font-weight: bold; font-size: 15px; margin-bottom: 5px;">${info.title}</div>
+                    <div style="font-size: 13.5px; line-height: 1.5;">${info.note}</div>
+                </div>
+            `;
         }
 
         // === Reorder ===
