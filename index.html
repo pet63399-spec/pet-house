@@ -34,6 +34,7 @@
             --user-bar-bg: #eff6ff;
             --user-bar-text: #1e40af;
             --user-bar-border: #bfdbfe;
+            --danger-color: #e74c3c;
             --bg-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180' fill='none'%3E%3Cg fill='%23334155' opacity='0.16'%3E%3Ccircle cx='38' cy='28' r='5'/%3E%3Ccircle cx='52' cy='22' r='5'/%3E%3Ccircle cx='66' cy='24' r='5'/%3E%3Ccircle cx='78' cy='32' r='5'/%3E%3Cellipse cx='58' cy='44' rx='14' ry='11'/%3E%3C/g%3E%3Cg fill='%23f97316' opacity='0.22'%3E%3Cpath d='M130 38 c-4-3-4-8 0-11 4-3 9 0 7 4 l20 10 c3-3 7-3 10 0 3 4 0 9-4 9 -3 0-5-2-6-4 l-20-8 c-2 2-5 3-7 0 z'/%3E%3C/g%3E%3Cg fill='%23334155' opacity='0.16'%3E%3Cpolygon points='22,108 30,86 44,98'/%3E%3Cpolygon points='56,98 70,86 78,108'/%3E%3Cellipse cx='50' cy='115' rx='25' ry='18'/%3E%3C/g%3E%3Cg transform='translate(120, 105) rotate(-30)' fill='%23334155' opacity='0.16'%3E%3Ccircle cx='12' cy='8' r='4.5'/%3E%3Ccircle cx='25' cy='4' r='4.5'/%3E%3Ccircle cx='38' cy='6' r='4.5'/%3E%3Ccircle cx='48' cy='15' r='4.5'/%3E%3Cellipse cx='30' cy='26' rx='13' ry='10'/%3E%3C/g%3E%3Cpath d='M100 78 c0-7 8-12 14-7 6-5 14 0 14 7 0 9-14 17-14 17 s-14-8-14-17 z' fill='%23ef4444' opacity='0.18'/%3E%3Cg fill='%230ea5e9' opacity='0.20'%3E%3Cpath d='M18 160 c7-4 18-4 25 0 -7 4-18 4-25 0 z'/%3E%3Cpolygon points='40,160 48,154 48,166'/%3E%3Ccircle cx='23' cy='159' r='1.5' fill='%23ffffff'/%3E%3C/g%3E%3Ccircle cx='95' cy='22' r='3.5' fill='%23334155' opacity='0.15'/%3E%3Ccircle cx='158' cy='85' r='3.5' fill='%23334155' opacity='0.15'/%3E%3Ccircle cx='85' cy='160' r='3.5' fill='%23334155' opacity='0.15'/%3E%3C/svg%3E");
         }
 
@@ -139,6 +140,46 @@
         }
         .user-loyalty-bar .user-welcome { display: flex; align-items: center; gap: 6px; }
 
+        /* Doctor Availability Badge */
+        .doctor-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+        .doctor-badge.available {
+            background: var(--notice-bg);
+            border: 1px solid var(--notice-border);
+            color: var(--notice-text);
+        }
+        .doctor-badge.unavailable {
+            background: rgba(231, 76, 60, 0.08);
+            border: 1px solid rgba(231, 76, 60, 0.25);
+            color: #c0392b;
+        }
+        body.dark-mode .doctor-badge.unavailable {
+            background: rgba(231, 76, 60, 0.15);
+            border-color: rgba(231, 76, 60, 0.35);
+            color: #ff6b6b;
+        }
+        .doctor-badge .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .doctor-badge.available .dot { background: #27ae60; animation: pulse-dot 1.5s infinite; }
+        .doctor-badge.unavailable .dot { background: #e74c3c; }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.3); }
+        }
+
         /* Hero Banner */
         .hero-banner {
             background: linear-gradient(135deg, rgba(30, 39, 46, 0.96), rgba(44, 62, 80, 0.94)), var(--bg-pattern);
@@ -175,6 +216,59 @@
         .hero-banner p { font-size: 13px; opacity: 0.9; line-height: 1.5; position: relative; z-index: 1; }
 
         .container { max-width: 520px; margin: 0 auto; padding: 0 15px 120px 15px; }
+
+        /* Search Bar */
+        .search-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 12px 14px 12px 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 13.5px;
+            font-weight: 600;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus { border-color: var(--blue-color); }
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-color);
+            font-size: 14px;
+            pointer-events: none;
+        }
+
+        /* Filter Chips */
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .filter-chips::-webkit-scrollbar { display: none; }
+        .filter-chip {
+            padding: 7px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+        .filter-chip:hover { border-color: var(--accent-color); }
+        .filter-chip.active { background: var(--accent-color); color: #fff; border-color: var(--accent-color); }
         
         .section-title { font-size: 18px; font-weight: 800; margin: 25px 0 12px; color: var(--primary-color); display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 8px; }
         
@@ -198,6 +292,7 @@
         .grid { display: flex; flex-direction: column; gap: 12px; }
         .product-card { background: var(--card-bg); border-radius: 12px; padding: 15px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; box-shadow: var(--card-shadow); transition: transform 0.15s ease; }
         .product-card:hover { transform: translateY(-2px); }
+        .product-card.hidden-by-search { display: none; }
         .product-info h3 { font-size: 15px; font-weight: 700; color: var(--primary-color); margin-bottom: 4px; }
         .product-info p { font-size: 12px; color: var(--gray-color); margin-bottom: 8px; }
         .product-price { font-size: 15px; font-weight: 900; color: var(--accent-color); }
@@ -251,6 +346,61 @@
         .btn-checkout { background: #25d366; color: white; border: none; padding: 11px 18px; border-radius: 10px; font-weight: 700; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25); }
         .btn-checkout:hover { background: #20ba59; }
 
+        /* Floating WhatsApp Button */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 80px;
+            left: 18px;
+            width: 52px;
+            height: 52px;
+            background: #25d366;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            box-shadow: 0 4px 14px rgba(37, 211, 102, 0.4);
+            cursor: pointer;
+            z-index: 999;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
+        }
+        .whatsapp-float.cart-visible { bottom: 80px; }
+
+        /* Reorder Button */
+        .reorder-banner {
+            background: var(--user-bar-bg);
+            border: 1px solid var(--user-bar-border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+        .reorder-banner .info { font-size: 12.5px; font-weight: 700; color: var(--user-bar-text); }
+        .reorder-banner .btn-reorder {
+            background: var(--blue-color);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .reorder-banner .btn-reorder:hover { background: var(--blue-hover); }
+
         /* Modal Overlay & Card */
         .modal-overlay {
             position: fixed;
@@ -293,7 +443,7 @@
         /* Form Inputs */
         .form-group { display: flex; flex-direction: column; gap: 5px; }
         .form-group label { font-size: 13px; font-weight: 700; color: var(--gray-color); }
-        .form-input {
+        .form-input, .form-select {
             width: 100%;
             padding: 11px 14px;
             border-radius: 10px;
@@ -303,8 +453,9 @@
             font-size: 13.5px;
             outline: none;
             transition: border-color 0.2s;
+            font-family: 'Cairo', sans-serif;
         }
-        .form-input:focus { border-color: var(--blue-color); }
+        .form-input:focus, .form-select:focus { border-color: var(--blue-color); }
 
         .btn-primary {
             background: var(--blue-color);
@@ -384,7 +535,7 @@
         .date-chip:hover { border-color: var(--accent-color); }
         .date-chip.active { background: var(--accent-color); color: #fff; border-color: var(--accent-color); }
 
-        /* Time slots grid (3:00 PM to 10:00 PM) */
+        /* Time slots grid */
         .time-slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .time-slot {
             padding: 9px 6px;
@@ -405,7 +556,6 @@
         .time-slot:hover { border-color: var(--accent-color); }
         .time-slot.active { background: var(--accent-color); color: #fff; border-color: var(--accent-color); }
 
-        /* ميعاد محجوز مسبقاً (ممنوع اختياره) */
         .time-slot.booked {
             background: rgba(231, 76, 60, 0.1) !important;
             border: 1px dashed rgba(231, 76, 60, 0.4) !important;
@@ -452,30 +602,59 @@
             align-items: center;
             gap: 8px;
         }
-        .cart-item-details { display: flex; flex-direction: column; gap: 2px; }
+        .cart-item-details { display: flex; flex-direction: column; gap: 2px; flex: 1; }
         .cart-item-details .title { font-size: 13px; font-weight: 700; color: var(--primary-color); }
         .cart-item-details .meta { font-size: 11.5px; color: var(--accent-color); font-weight: 600; }
-        .cart-item-right { display: flex; align-items: center; gap: 10px; }
-        .cart-item-right .price { font-size: 13.5px; font-weight: 800; color: var(--text-color); }
+        .cart-item-right { display: flex; align-items: center; gap: 8px; }
+        .cart-item-right .price { font-size: 13.5px; font-weight: 800; color: var(--text-color); white-space: nowrap; }
         .btn-remove-item { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 15px; padding: 4px 6px; border-radius: 6px; }
         .btn-remove-item:hover { background: rgba(231, 76, 60, 0.1); }
+
+        /* Quantity Controls */
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .qty-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.15s;
+        }
+        .qty-btn:hover { border-color: var(--accent-color); color: var(--accent-color); }
+        .qty-val { font-size: 13px; font-weight: 800; min-width: 20px; text-align: center; color: var(--primary-color); }
 
         .cart-total-box {
             background: var(--card-bg);
             border-top: 2px solid var(--border-color);
             padding-top: 12px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 15px;
-            font-weight: 800;
-            color: var(--primary-color);
+            flex-direction: column;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-color);
         }
-        .cart-total-box .total-amount { color: var(--accent-color); font-size: 17px; }
+        .cart-total-row { display: flex; justify-content: space-between; align-items: center; }
+        .cart-total-row.grand { font-size: 15px; font-weight: 800; color: var(--primary-color); border-top: 1px solid var(--border-color); padding-top: 8px; margin-top: 4px; }
+        .cart-total-row.grand .total-amount { color: var(--accent-color); font-size: 17px; }
 
         .cart-modal-actions { display: flex; gap: 10px; }
         .btn-clear-cart { background: var(--slot-bg); border: 1px solid var(--border-color); color: var(--gray-color); padding: 11px 14px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; }
         .btn-clear-cart:hover { color: #e74c3c; border-color: #e74c3c; }
+
+        /* Section hidden */
+        .section-hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -516,141 +695,175 @@
     </div>
 
     <div class="container">
+
+        <!-- شارة الدكتور -->
+        <div class="doctor-badge" id="doctorBadge">
+            <span class="dot"></span>
+            <span id="doctorBadgeText">الدكتور متاح الآن</span>
+        </div>
+
+        <!-- بحث -->
+        <div class="search-container">
+            <input type="text" class="search-input" id="searchInput" placeholder="ابحث عن منتج أو خدمة..." oninput="handleSearch()">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        </div>
+
+        <!-- فلاتر -->
+        <div class="filter-chips">
+            <div class="filter-chip active" onclick="filterSection('all', this)">الكل</div>
+            <div class="filter-chip" onclick="filterSection('food', this)">🍗 دراي فود</div>
+            <div class="filter-chip" onclick="filterSection('grooming', this)">✂️ جرومينج</div>
+        </div>
+
+        <!-- زر إعادة الطلب السابق -->
+        <div class="reorder-banner" id="reorderBanner" style="display: none;">
+            <div class="info"><i class="fa-solid fa-rotate-right"></i> لديك طلب سابق محفوظ</div>
+            <button class="btn-reorder" onclick="reorderLast()"><i class="fa-solid fa-cart-plus"></i> إعادة الطلب</button>
+        </div>
         
         <!-- قسم الدراي فود -->
-        <div class="section-title"><span>أكياس الدراي فود (مقفولة)</span><i class="fa-solid fa-box-open" style="color: var(--accent-color);"></i></div>
-        <div class="grid">
-            <div class="product-card">
-                <div class="product-info">
-                    <h3>Chat & Chat Sterilized</h3>
-                    <p>دجاج ورومي - للقطط المعقمة</p>
-                    <div class="product-price">260 جنيه</div>
+        <div class="section-block" data-section="food">
+            <div class="section-title"><span>أكياس الدراي فود (مقفولة)</span><i class="fa-solid fa-box-open" style="color: var(--accent-color);"></i></div>
+            <div class="grid">
+                <div class="product-card" data-name="Chat & Chat Sterilized دجاج ورومي للقطط المعقمة">
+                    <div class="product-info">
+                        <h3>Chat & Chat Sterilized</h3>
+                        <p>دجاج ورومي - للقطط المعقمة</p>
+                        <div class="product-price">260 جنيه</div>
+                    </div>
+                    <button class="btn-action" onclick="addItem('Chat & Chat Sterilized (معقمة)', 260)"><i class="fa-solid fa-plus"></i> إضافة</button>
                 </div>
-                <button class="btn-action" onclick="addItem('Chat & Chat Sterilized (معقمة)', 260)"><i class="fa-solid fa-plus"></i> إضافة</button>
-            </div>
 
-            <div class="product-card">
-                <div class="product-info">
-                    <h3>Chat & Chat Adult 900g</h3>
-                    <p>دجاج وبازلاء - للقطط البالغة</p>
-                    <div class="product-price">240 جنيه</div>
+                <div class="product-card" data-name="Chat & Chat Adult 900g دجاج وبازلاء للقطط البالغة">
+                    <div class="product-info">
+                        <h3>Chat & Chat Adult 900g</h3>
+                        <p>دجاج وبازلاء - للقطط البالغة</p>
+                        <div class="product-price">240 جنيه</div>
+                    </div>
+                    <button class="btn-action" onclick="addItem('Chat & Chat Adult 900g', 240)"><i class="fa-solid fa-plus"></i> إضافة</button>
                 </div>
-                <button class="btn-action" onclick="addItem('Chat & Chat Adult 900g', 240)"><i class="fa-solid fa-plus"></i> إضافة</button>
-            </div>
 
-            <div class="product-card">
-                <div class="product-info">
-                    <h3>Bewi Cat Adult Poultry</h3>
-                    <p>دواجن - للقطط البالغة والمعقمة</p>
-                    <div class="product-price">450 جنيه</div>
+                <div class="product-card" data-name="Bewi Cat Adult Poultry دواجن للقطط البالغة والمعقمة">
+                    <div class="product-info">
+                        <h3>Bewi Cat Adult Poultry</h3>
+                        <p>دواجن - للقطط البالغة والمعقمة</p>
+                        <div class="product-price">450 جنيه</div>
+                    </div>
+                    <button class="btn-action" onclick="addItem('Bewi Cat Adult Poultry', 450)"><i class="fa-solid fa-plus"></i> إضافة</button>
                 </div>
-                <button class="btn-action" onclick="addItem('Bewi Cat Adult Poultry', 450)"><i class="fa-solid fa-plus"></i> إضافة</button>
-            </div>
 
-            <div class="product-card">
-                <div class="product-info">
-                    <h3>Purina Friskies Adult</h3>
-                    <p>دجاج وخضروات - 300 جرام</p>
-                    <div class="product-price">300 جنيه</div>
+                <div class="product-card" data-name="Purina Friskies Adult دجاج وخضروات 300 جرام">
+                    <div class="product-info">
+                        <h3>Purina Friskies Adult</h3>
+                        <p>دجاج وخضروات - 300 جرام</p>
+                        <div class="product-price">300 جنيه</div>
+                    </div>
+                    <button class="btn-action" onclick="addItem('Purina Friskies Adult 300g', 300)"><i class="fa-solid fa-plus"></i> إضافة</button>
                 </div>
-                <button class="btn-action" onclick="addItem('Purina Friskies Adult 300g', 300)"><i class="fa-solid fa-plus"></i> إضافة</button>
-            </div>
 
-            <div class="product-card">
-                <div class="product-info">
-                    <h3>Alpha Cats</h3>
-                    <p>نكهة الدواجن</p>
-                    <div class="product-price">150 جنيه</div>
+                <div class="product-card" data-name="Alpha Cats نكهة الدواجن">
+                    <div class="product-info">
+                        <h3>Alpha Cats</h3>
+                        <p>نكهة الدواجن</p>
+                        <div class="product-price">150 جنيه</div>
+                    </div>
+                    <button class="btn-action" onclick="addItem('Alpha Cats', 150)"><i class="fa-solid fa-plus"></i> إضافة</button>
                 </div>
-                <button class="btn-action" onclick="addItem('Alpha Cats', 150)"><i class="fa-solid fa-plus"></i> إضافة</button>
             </div>
         </div>
 
         <!-- قسم خدمات الجرومينج -->
-        <div class="section-title"><span>خدمات الجرومينج والقص</span><i class="fa-solid fa-scissors" style="color: var(--accent-color);"></i></div>
-        
-        <div class="grooming-notice">
-            <i class="fa-solid fa-clock"></i>
-            <div>مواعيد الجرومينج والعيادة: متاحة يومياً من <strong>3:00 عصراً</strong> حتى <strong>10:00 مساءً</strong></div>
-        </div>
-
-        <div class="grid">
-            <div class="product-card">
-                <div class="product-info">
-                    <h3>شاور فقط</h3>
-                    <p>تنظيف واستحمام احترافي</p>
-                    <div class="product-price">170 جنيه</div>
-                </div>
-                <button class="btn-action btn-grooming" onclick="openBookingModal('خدمة: شاور فقط', 170)"><i class="fa-regular fa-calendar-check"></i> حجز موعد</button>
+        <div class="section-block" data-section="grooming">
+            <div class="section-title"><span>خدمات الجرومينج والقص</span><i class="fa-solid fa-scissors" style="color: var(--accent-color);"></i></div>
+            
+            <div class="grooming-notice">
+                <i class="fa-solid fa-clock"></i>
+                <div>مواعيد الجرومينج والعيادة: متاحة يومياً من <strong>3:00 عصراً</strong> حتى <strong>10:00 مساءً</strong></div>
             </div>
 
-            <div class="product-card">
-                <div class="product-info">
-                    <h3>حلاقة وشاور</h3>
-                    <p>باقة العناية المتكاملة</p>
-                    <div class="product-price">350 جنيه</div>
+            <div class="grid">
+                <div class="product-card" data-name="شاور فقط تنظيف واستحمام احترافي">
+                    <div class="product-info">
+                        <h3>شاور فقط</h3>
+                        <p>تنظيف واستحمام احترافي</p>
+                        <div class="product-price">170 جنيه</div>
+                    </div>
+                    <button class="btn-action btn-grooming" onclick="openBookingModal('خدمة: شاور فقط', 170)"><i class="fa-regular fa-calendar-check"></i> حجز موعد</button>
                 </div>
-                <button class="btn-action btn-grooming" onclick="openBookingModal('خدمة: حلاقة وشاور', 350)"><i class="fa-regular fa-calendar-check"></i> حجز موعد</button>
-            </div>
 
-            <div class="product-card">
-                <div class="product-info">
-                    <h3>حلاقة فقط</h3>
-                    <p>قص الشعر حسب الطلب</p>
-                    <div class="product-price">200 جنيه</div>
+                <div class="product-card" data-name="حلاقة وشاور باقة العناية المتكاملة">
+                    <div class="product-info">
+                        <h3>حلاقة وشاور</h3>
+                        <p>باقة العناية المتكاملة</p>
+                        <div class="product-price">350 جنيه</div>
+                    </div>
+                    <button class="btn-action btn-grooming" onclick="openBookingModal('خدمة: حلاقة وشاور', 350)"><i class="fa-regular fa-calendar-check"></i> حجز موعد</button>
                 </div>
-                <button class="btn-action btn-grooming" onclick="openBookingModal('خدمة: حلاقة فقط', 200)"><i class="fa-regular fa-calendar-check"></i> حجز موعد</button>
-            </div>
 
-            <div class="product-card">
-                <div class="product-info">
-                    <h3>تهذيب</h3>
-                    <p>تهذيب الشعر والأطراف</p>
-                    <div class="product-price">140 جنيه</div>
+                <div class="product-card" data-name="حلاقة فقط قص الشعر حسب الطلب">
+                    <div class="product-info">
+                        <h3>حلاقة فقط</h3>
+                        <p>قص الشعر حسب الطلب</p>
+                        <div class="product-price">200 جنيه</div>
+                    </div>
+                    <button class="btn-action btn-grooming" onclick="openBookingModal('خدمة: حلاقة فقط', 200)"><i class="fa-regular fa-calendar-check"></i> حجز موعد</button>
                 </div>
-                <button class="btn-action btn-grooming" onclick="openBookingModal('خدمة: تهذيب', 140)"><i class="fa-regular fa-calendar-check"></i> حجز موعد</button>
-            </div>
 
-            <div class="product-card">
-                <div class="product-info">
-                    <h3>حلاقة باو وستول</h3>
-                    <p>كفوف وأجزاء حساسة</p>
-                    <div class="product-price">60 جنيه</div>
+                <div class="product-card" data-name="تهذيب تهذيب الشعر والأطراف">
+                    <div class="product-info">
+                        <h3>تهذيب</h3>
+                        <p>تهذيب الشعر والأطراف</p>
+                        <div class="product-price">140 جنيه</div>
+                    </div>
+                    <button class="btn-action btn-grooming" onclick="openBookingModal('خدمة: تهذيب', 140)"><i class="fa-regular fa-calendar-check"></i> حجز موعد</button>
                 </div>
-                <button class="btn-action btn-grooming" onclick="openBookingModal('خدمة: حلاقة باو وستول', 60)"><i class="fa-regular fa-calendar-check"></i> حجز موعد</button>
-            </div>
 
-            <div class="product-card">
-                <div class="product-info">
-                    <h3>شاور كلاب كبيرة</h3>
-                    <p>للأكلاب الحجم الكبير</p>
-                    <div class="product-price">300 جنيه</div>
+                <div class="product-card" data-name="حلاقة باو وستول كفوف وأجزاء حساسة">
+                    <div class="product-info">
+                        <h3>حلاقة باو وستول</h3>
+                        <p>كفوف وأجزاء حساسة</p>
+                        <div class="product-price">60 جنيه</div>
+                    </div>
+                    <button class="btn-action btn-grooming" onclick="openBookingModal('خدمة: حلاقة باو وستول', 60)"><i class="fa-regular fa-calendar-check"></i> حجز موعد</button>
                 </div>
-                <button class="btn-action btn-grooming" onclick="openBookingModal('خدمة: شاور كلاب كبيرة', 300)"><i class="fa-regular fa-calendar-check"></i> حجز موعد</button>
-            </div>
 
-            <div class="product-card">
-                <div class="product-info">
-                    <h3>شاور كلاب صغيرة</h3>
-                    <p>للأكلاب الحجم الصغير</p>
-                    <div class="product-price">250 جنيه</div>
+                <div class="product-card" data-name="شاور كلاب كبيرة للأكلاب الحجم الكبير">
+                    <div class="product-info">
+                        <h3>شاور كلاب كبيرة</h3>
+                        <p>للأكلاب الحجم الكبير</p>
+                        <div class="product-price">300 جنيه</div>
+                    </div>
+                    <button class="btn-action btn-grooming" onclick="openBookingModal('خدمة: شاور كلاب كبيرة', 300)"><i class="fa-regular fa-calendar-check"></i> حجز موعد</button>
                 </div>
-                <button class="btn-action btn-grooming" onclick="openBookingModal('خدمة: شاور كلاب صغيرة', 250)"><i class="fa-regular fa-calendar-check"></i> حجز موعد</button>
-            </div>
 
-            <div class="product-card">
-                <div class="product-info">
-                    <h3>حلاقة كلاب</h3>
-                    <p>حلاقة شاملة للكلاب</p>
-                    <div class="product-price">250 جنيه</div>
+                <div class="product-card" data-name="شاور كلاب صغيرة للأكلاب الحجم الصغير">
+                    <div class="product-info">
+                        <h3>شاور كلاب صغيرة</h3>
+                        <p>للأكلاب الحجم الصغير</p>
+                        <div class="product-price">250 جنيه</div>
+                    </div>
+                    <button class="btn-action btn-grooming" onclick="openBookingModal('خدمة: شاور كلاب صغيرة', 250)"><i class="fa-regular fa-calendar-check"></i> حجز موعد</button>
                 </div>
-                <button class="btn-action btn-grooming" onclick="openBookingModal('خدمة: حلاقة كلاب', 250)"><i class="fa-regular fa-calendar-check"></i> حجز موعد</button>
+
+                <div class="product-card" data-name="حلاقة كلاب حلاقة شاملة للكلاب">
+                    <div class="product-info">
+                        <h3>حلاقة كلاب</h3>
+                        <p>حلاقة شاملة للكلاب</p>
+                        <div class="product-price">250 جنيه</div>
+                    </div>
+                    <button class="btn-action btn-grooming" onclick="openBookingModal('خدمة: حلاقة كلاب', 250)"><i class="fa-regular fa-calendar-check"></i> حجز موعد</button>
+                </div>
             </div>
         </div>
 
     </div>
 
-    <!-- نافذة تسجيل العميل (تفتح عند بداية فتح الموقع) -->
+    <!-- زر واتساب عائم -->
+    <a class="whatsapp-float" id="whatsappFloat" href="https://wa.me/201210556177" target="_blank" title="تواصل معنا عبر الواتساب">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
+    <!-- نافذة تسجيل العميل -->
     <div class="modal-overlay" id="authModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -676,6 +889,27 @@
                 <div class="form-group">
                     <label><i class="fa-solid fa-location-dot"></i> العنوان بالتفصيل (المحلة الكبرى):</label>
                     <input type="text" class="form-input" id="regAddress" placeholder="المنطقة / الشارع / علامة مميزة" required>
+                </div>
+
+                <!-- بروفايل الحيوان الأليف -->
+                <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 4px;">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--gray-color); margin-bottom: 8px;"><i class="fa-solid fa-paw"></i> بيانات الحيوان الأليف (اختياري):</div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <div class="form-group" style="flex: 1; min-width: 120px;">
+                            <input type="text" class="form-input" id="petName" placeholder="اسم الحيوان">
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 100px;">
+                            <select class="form-select" id="petType">
+                                <option value="">النوع</option>
+                                <option value="قطة">🐱 قطة</option>
+                                <option value="كلب">🐶 كلب</option>
+                                <option value="آخر">🐾 آخر</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 80px;">
+                            <input type="text" class="form-input" id="petAge" placeholder="العمر">
+                        </div>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn-primary" style="margin-top: 5px;">
@@ -710,6 +944,10 @@
                     <span class="label">العنوان:</span>
                     <span class="val" id="profileAddress">-</span>
                 </div>
+                <div class="user-details-row" id="profilePetRow" style="display: none;">
+                    <span class="label">الحيوان الأليف:</span>
+                    <span class="val" id="profilePet">-</span>
+                </div>
             </div>
 
             <div style="display: flex; gap: 8px;">
@@ -723,7 +961,7 @@
         </div>
     </div>
 
-    <!-- نافذة حجز موعد الجرومينج (3 العصر حتى 10 بالليل) -->
+    <!-- نافذة حجز موعد الجرومينج -->
     <div class="modal-overlay" id="bookingModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -751,7 +989,6 @@
                     <span style="font-size: 11px; font-weight: 700;"><span style="color: #27ae60;">●</span> متاح &nbsp; <span style="color: #e74c3c;">●</span> محجوز</span>
                 </div>
                 <div class="time-slots-grid" id="timeSlotsContainer">
-                    <!-- يتم بناؤها وفحص المواعيد المحجوزة تلقائياً -->
                 </div>
             </div>
 
@@ -761,7 +998,7 @@
         </div>
     </div>
 
-    <!-- نافذة مراجعة السلة وحذف العناصر -->
+    <!-- نافذة مراجعة السلة -->
     <div class="modal-overlay" id="cartModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -770,12 +1007,33 @@
             </div>
 
             <div class="cart-items-list" id="cartItemsList">
-                <!-- Items inserted via JS -->
+            </div>
+
+            <!-- اختيار المنطقة -->
+            <div class="form-group">
+                <label><i class="fa-solid fa-truck"></i> منطقة التوصيل:</label>
+                <select class="form-select" id="shippingArea" onchange="updateCartTotals()">
+                    <option value="0">استلام من المحل (مجاناً)</option>
+                    <option value="15">وسط المحلة الكبرى - 15 ج.م</option>
+                    <option value="25">أطراف المحلة - 25 ج.م</option>
+                    <option value="35">خارج المحلة (قرى مجاورة) - 35 ج.م</option>
+                    <option value="50">مناطق بعيدة - 50 ج.م</option>
+                </select>
             </div>
 
             <div class="cart-total-box">
-                <span>الإجمالي الكلي:</span>
-                <span class="total-amount" id="modalCartTotal">0 ج.م</span>
+                <div class="cart-total-row">
+                    <span>المنتجات والخدمات:</span>
+                    <span id="modalSubtotal">0 ج.م</span>
+                </div>
+                <div class="cart-total-row">
+                    <span>مصاريف الشحن:</span>
+                    <span id="modalShipping">0 ج.م</span>
+                </div>
+                <div class="cart-total-row grand">
+                    <span>الإجمالي الكلي:</span>
+                    <span class="total-amount" id="modalCartTotal">0 ج.م</span>
+                </div>
             </div>
 
             <div class="cart-modal-actions">
@@ -818,7 +1076,6 @@
         function setCurrentUser(user) {
             if (user) {
                 localStorage.setItem('petHouseCurrentUser', JSON.stringify(user));
-                // حفظ أيضاً في قاعدة بيانات المستخدمين بالرقم
                 const db = getUsersDB();
                 db[user.phone] = user;
                 saveUsersDB(db);
@@ -828,7 +1085,7 @@
             renderUserInfo();
         }
 
-        // تحديث واجهة بيانات العميل في الهيدر والشريط
+        // تحديث واجهة بيانات العميل
         function renderUserInfo() {
             const user = getCurrentUser();
             const headerUserName = document.getElementById('headerUserName');
@@ -836,7 +1093,7 @@
             const barUserName = document.getElementById('barUserName');
 
             if (user) {
-                headerUserName.innerText = user.name.split(' ')[0]; // الاسم الأول
+                headerUserName.innerText = user.name.split(' ')[0];
                 barUserName.innerText = user.name;
                 userLoyaltyBar.style.display = 'flex';
             } else {
@@ -844,6 +1101,23 @@
                 barUserName.innerText = 'عميلنا العزيز';
             }
         }
+
+        // === شارة توافر الدكتور (3 عصراً - 10 مساءً) ===
+        function updateDoctorBadge() {
+            const badge = document.getElementById('doctorBadge');
+            const text = document.getElementById('doctorBadgeText');
+            if (!badge || !text) return;
+            const hour = new Date().getHours();
+            if (hour >= 15 && hour < 22) {
+                badge.className = 'doctor-badge available';
+                text.innerHTML = '<i class="fa-solid fa-user-doctor"></i> الدكتور متاح الآن ✅ (من 3 عصراً حتى 10 مساءً)';
+            } else {
+                badge.className = 'doctor-badge unavailable';
+                text.innerHTML = '<i class="fa-solid fa-user-doctor"></i> الدكتور غير متاح حالياً ❌ (يعود من 3 عصراً)';
+            }
+        }
+        updateDoctorBadge();
+        setInterval(updateDoctorBadge, 60000);
 
         // فتح وإغلاق نوافذ الحساب
         function openAuthModal() {
@@ -856,11 +1130,14 @@
                 phoneInput.style.backgroundColor = 'var(--slot-bg)';
                 phoneInput.style.opacity = '0.8';
                 document.getElementById('regAddress').value = user.address;
+                // بيانات الحيوان
+                if (user.petName) document.getElementById('petName').value = user.petName;
+                if (user.petType) document.getElementById('petType').value = user.petType;
+                if (user.petAge) document.getElementById('petAge').value = user.petAge;
             } else {
                 phoneInput.readOnly = false;
                 phoneInput.style.backgroundColor = '';
                 phoneInput.style.opacity = '';
-                // تحقق لو فيه رقم محفوظ من جلسة سابقة
                 const savedPhone = localStorage.getItem('petHouseLastPhone');
                 if (savedPhone) {
                     phoneInput.value = savedPhone;
@@ -881,6 +1158,19 @@
             document.getElementById('profileName').innerText = user.name;
             document.getElementById('profilePhone').innerText = user.phone;
             document.getElementById('profileAddress').innerText = user.address;
+            
+            const petRow = document.getElementById('profilePetRow');
+            const petVal = document.getElementById('profilePet');
+            if (user.petName) {
+                let petInfo = user.petName;
+                if (user.petType) petInfo += ` (${user.petType})`;
+                if (user.petAge) petInfo += ` - ${user.petAge}`;
+                petVal.innerText = petInfo;
+                petRow.style.display = 'flex';
+            } else {
+                petRow.style.display = 'none';
+            }
+            
             document.getElementById('profileModal').classList.add('active');
         }
         function closeProfileModal() {
@@ -892,29 +1182,34 @@
             const name = document.getElementById('regName').value.trim();
             const phone = document.getElementById('regPhone').value.trim();
             const address = document.getElementById('regAddress').value.trim();
+            const petName = document.getElementById('petName').value.trim();
+            const petType = document.getElementById('petType').value;
+            const petAge = document.getElementById('petAge').value.trim();
 
             if (!name || !phone || !address) {
                 alert('يرجى ملء جميع الحقول المطلوبة');
                 return;
             }
 
-            // حفظ الرقم بشكل دائم عشان يتملأ تلقائي في المرة الجاية
             localStorage.setItem('petHouseLastPhone', phone);
 
-            // فحص هل العميل مسجل مسبقاً بنفس رقم الهاتف
             const db = getUsersDB();
             let user = db[phone];
             if (user) {
-                // تحديث بياناته
                 user.name = name;
                 user.address = address;
+                user.petName = petName;
+                user.petType = petType;
+                user.petAge = petAge;
                 alert(`أهلاً بعودتك يا ${name}! تم تحديث بيانات حسابك بنجاح ✅`);
             } else {
-                // مستخدم جديد
                 user = {
                     name: name,
                     phone: phone,
                     address: address,
+                    petName: petName,
+                    petType: petType,
+                    petAge: petAge,
                     createdAt: new Date().toISOString()
                 };
             }
@@ -976,16 +1271,49 @@
             }
         }
 
-        // === إدارة السلة ===
+        // === إدارة السلة مع localStorage ===
         let cart = [];
 
-        function addItem(name, price) {
-            cart.push({
-                name: name,
-                price: price,
-                isService: false
-            });
+        function loadCart() {
+            try {
+                cart = JSON.parse(localStorage.getItem('petHouseCart')) || [];
+            } catch(e) {
+                cart = [];
+            }
             updateCart();
+        }
+
+        function saveCart() {
+            localStorage.setItem('petHouseCart', JSON.stringify(cart));
+        }
+
+        function addItem(name, price) {
+            // لو المنتج موجود زوّد الكمية
+            const existing = cart.find(item => item.name === name && !item.isService);
+            if (existing) {
+                existing.qty = (existing.qty || 1) + 1;
+            } else {
+                cart.push({
+                    name: name,
+                    price: price,
+                    qty: 1,
+                    isService: false
+                });
+            }
+            saveCart();
+            updateCart();
+        }
+
+        function changeQty(index, delta) {
+            if (!cart[index] || cart[index].isService) return;
+            cart[index].qty = (cart[index].qty || 1) + delta;
+            if (cart[index].qty <= 0) {
+                removeItem(index);
+                return;
+            }
+            saveCart();
+            updateCart();
+            renderCartModal();
         }
 
         function removeItem(index) {
@@ -994,6 +1322,7 @@
                 releaseBookedSlot(item.date, item.time);
             }
             cart.splice(index, 1);
+            saveCart();
             updateCart();
             renderCartModal();
             if (cart.length === 0) {
@@ -1009,25 +1338,130 @@
                     }
                 });
                 cart = [];
+                saveCart();
                 updateCart();
                 closeCartModal();
             }
         }
 
+        function getCartSubtotal() {
+            return cart.reduce((sum, item) => {
+                const qty = item.qty || 1;
+                return sum + (item.price * qty);
+            }, 0);
+        }
+
+        function getShippingCost() {
+            const sel = document.getElementById('shippingArea');
+            return sel ? parseInt(sel.value) || 0 : 0;
+        }
+
         function updateCart() {
             const bar = document.getElementById('cartBar');
             const summary = document.getElementById('cartSummary');
+            const whatsappFloat = document.getElementById('whatsappFloat');
             
             if (cart.length > 0) {
                 bar.style.display = 'flex';
-                let total = cart.reduce((sum, item) => sum + item.price, 0);
-                summary.innerHTML = `<i class="fa-solid fa-cart-shopping" style="color: var(--accent-color);"></i> ${cart.length} عناصر | ${total} ج.م`;
+                if (whatsappFloat) whatsappFloat.classList.add('cart-visible');
+                let totalItems = cart.reduce((sum, item) => sum + (item.qty || 1), 0);
+                let subtotal = getCartSubtotal();
+                summary.innerHTML = `<i class="fa-solid fa-cart-shopping" style="color: var(--accent-color);"></i> ${totalItems} عناصر | ${subtotal} ج.م`;
             } else {
                 bar.style.display = 'none';
+                if (whatsappFloat) whatsappFloat.classList.remove('cart-visible');
             }
         }
 
-        // === إدارة مواعيد الجرومينج وحظر المواعيد المحجوزة ===
+        function updateCartTotals() {
+            const subtotal = getCartSubtotal();
+            const shipping = getShippingCost();
+            const grand = subtotal + shipping;
+            const subEl = document.getElementById('modalSubtotal');
+            const shipEl = document.getElementById('modalShipping');
+            const totalEl = document.getElementById('modalCartTotal');
+            if (subEl) subEl.innerText = subtotal + ' ج.م';
+            if (shipEl) shipEl.innerText = shipping > 0 ? shipping + ' ج.م' : 'مجاناً';
+            if (totalEl) totalEl.innerText = grand + ' ج.م';
+        }
+
+        // === البحث والفلترة ===
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const cards = document.querySelectorAll('.product-card');
+            cards.forEach(card => {
+                const name = (card.getAttribute('data-name') || '').toLowerCase();
+                if (!query || name.includes(query)) {
+                    card.classList.remove('hidden-by-search');
+                } else {
+                    card.classList.add('hidden-by-search');
+                }
+            });
+        }
+
+        function filterSection(section, chipEl) {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            chipEl.classList.add('active');
+            
+            const blocks = document.querySelectorAll('.section-block');
+            blocks.forEach(block => {
+                if (section === 'all' || block.getAttribute('data-section') === section) {
+                    block.classList.remove('section-hidden');
+                } else {
+                    block.classList.add('section-hidden');
+                }
+            });
+        }
+
+        // === إعادة الطلب السابق ===
+        function saveLastOrder() {
+            const orderItems = cart.filter(item => !item.isService).map(item => ({
+                name: item.name,
+                price: item.price,
+                qty: item.qty || 1
+            }));
+            if (orderItems.length > 0) {
+                localStorage.setItem('petHouseLastOrder', JSON.stringify(orderItems));
+            }
+        }
+
+        function checkReorder() {
+            try {
+                const lastOrder = JSON.parse(localStorage.getItem('petHouseLastOrder'));
+                if (lastOrder && lastOrder.length > 0) {
+                    document.getElementById('reorderBanner').style.display = 'flex';
+                } else {
+                    document.getElementById('reorderBanner').style.display = 'none';
+                }
+            } catch(e) {
+                document.getElementById('reorderBanner').style.display = 'none';
+            }
+        }
+
+        function reorderLast() {
+            try {
+                const lastOrder = JSON.parse(localStorage.getItem('petHouseLastOrder'));
+                if (!lastOrder || lastOrder.length === 0) return;
+                lastOrder.forEach(item => {
+                    const existing = cart.find(c => c.name === item.name && !c.isService);
+                    if (existing) {
+                        existing.qty = (existing.qty || 1) + (item.qty || 1);
+                    } else {
+                        cart.push({
+                            name: item.name,
+                            price: item.price,
+                            qty: item.qty || 1,
+                            isService: false
+                        });
+                    }
+                });
+                saveCart();
+                updateCart();
+                alert('تم إضافة الطلب السابق إلى السلة ✅');
+            } catch(e) {}
+        }
+
+        // === إدارة مواعيد الجرومينج ===
         const allTimeSlots = [
             '03:00 عصراً', '03:30 عصراً',
             '04:00 عصراً', '04:30 عصراً',
@@ -1159,16 +1593,17 @@
                 return;
             }
 
-            // قفل الموعد فوراً حتى لا يختاره أي شخص آخر
             saveBookedSlot(currentBooking.date, currentBooking.time);
 
             cart.push({
                 name: currentBooking.name,
                 price: currentBooking.price,
+                qty: 1,
                 isService: true,
                 date: currentBooking.date,
                 time: currentBooking.time
             });
+            saveCart();
             closeBookingModal();
             updateCart();
         }
@@ -1187,10 +1622,9 @@
         function renderCartModal() {
             const list = document.getElementById('cartItemsList');
             list.innerHTML = '';
-            let total = 0;
 
             cart.forEach((item, index) => {
-                total += item.price;
+                const qty = item.qty || 1;
                 const row = document.createElement('div');
                 row.className = 'cart-item-row';
                 
@@ -1199,20 +1633,32 @@
                     metaHtml = `<div class="meta"><i class="fa-regular fa-clock"></i> الموعد: ${item.date} (${item.time})</div>`;
                 }
 
+                let qtyHtml = '';
+                if (!item.isService) {
+                    qtyHtml = `
+                        <div class="qty-controls">
+                            <button class="qty-btn" onclick="changeQty(${index}, -1)">−</button>
+                            <span class="qty-val">${qty}</span>
+                            <button class="qty-btn" onclick="changeQty(${index}, 1)">+</button>
+                        </div>
+                    `;
+                }
+
                 row.innerHTML = `
                     <div class="cart-item-details">
                         <div class="title">${item.name}</div>
                         ${metaHtml}
+                        ${qtyHtml}
                     </div>
                     <div class="cart-item-right">
-                        <div class="price">${item.price} ج.م</div>
+                        <div class="price">${item.price * qty} ج.م</div>
                         <button class="btn-remove-item" onclick="removeItem(${index})" title="حذف"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                 `;
                 list.appendChild(row);
             });
 
-            document.getElementById('modalCartTotal').innerText = total + ' ج.م';
+            updateCartTotals();
         }
 
         // إغلاق المودال عند النقر خارج المحتوى
@@ -1227,46 +1673,66 @@
             if (e.target === profileModal) closeProfileModal();
         }
 
-        // === إرسال الطلب عبر الواتساب مع بيانات العميل ===
+        // === إرسال الطلب عبر الواتساب ===
         function sendOrder() {
             if (cart.length === 0) return;
 
             let user = getCurrentUser();
-            // إذا لم يكن العميل مسجلاً بياناته، نفتح له نافذة التسجيل أولاً
             if (!user) {
                 alert('يرجى تسجيل بياناتك أولاً وتحديد عنوان التوصيل!');
                 openAuthModal();
                 return;
             }
 
-            let total = cart.reduce((sum, item) => sum + item.price, 0);
+            // حفظ الطلب كآخر طلب
+            saveLastOrder();
+
+            let subtotal = getCartSubtotal();
+            let shipping = getShippingCost();
+            let grandTotal = subtotal + shipping;
 
             let text = "🐾 مرحباً Pet House، أرجو تنفيذ الطلب الآتي:\n\n";
             text += "👤 بيانات العميل:\n";
             text += `• الاسم: ${user.name}\n`;
             text += `• رقم الموبايل: ${user.phone}\n`;
-            text += `• العنوان: ${user.address}\n\n`;
+            text += `• العنوان: ${user.address}\n`;
 
-            text += "📦 قائمة الطلبات:\n";
+            if (user.petName) {
+                text += `\n🐾 الحيوان الأليف: ${user.petName}`;
+                if (user.petType) text += ` (${user.petType})`;
+                if (user.petAge) text += ` - عمره ${user.petAge}`;
+                text += '\n';
+            }
+
+            text += "\n📦 قائمة الطلبات:\n";
             cart.forEach((item, index) => {
+                const qty = item.qty || 1;
                 if (item.isService && item.time) {
                     text += `${index + 1}- ${item.name} (${item.price} ج.م)\n   ⏰ الموعد: ${item.date} - الساعة ${item.time}\n`;
                 } else {
-                    text += `${index + 1}- ${item.name} (${item.price} ج.م)\n`;
+                    text += `${index + 1}- ${item.name} × ${qty} (${item.price * qty} ج.م)\n`;
                 }
             });
 
-            text += `\n💰 الإجمالي: ${total} ج.م`;
+            text += `\n💰 المنتجات: ${subtotal} ج.م`;
+            if (shipping > 0) {
+                const shippingSelect = document.getElementById('shippingArea');
+                const areaName = shippingSelect ? shippingSelect.options[shippingSelect.selectedIndex].text.split(' - ')[0] : '';
+                text += `\n🚚 الشحن (${areaName}): ${shipping} ج.م`;
+            }
+            text += `\n✅ الإجمالي الكلي: ${grandTotal} ج.م`;
+
             let encoded = encodeURIComponent(text);
             window.location.href = `https://wa.me/201210556177?text=${encoded}`;
         }
 
-        // === فتح نافذة التسجيل عند فتح الموقع لأول مرة إذا لم يكن مسجلاً ===
+        // === فتح نافذة التسجيل عند فتح الموقع لأول مرة ===
         window.addEventListener('DOMContentLoaded', () => {
             renderUserInfo();
+            loadCart();
+            checkReorder();
             const user = getCurrentUser();
             if (!user) {
-                // فتح نافذة التسجيل بعد نصف ثانية للترحيب
                 setTimeout(() => {
                     openAuthModal();
                 }, 500);
