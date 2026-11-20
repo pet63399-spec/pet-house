@@ -848,10 +848,23 @@
         // فتح وإغلاق نوافذ الحساب
         function openAuthModal() {
             const user = getCurrentUser();
+            const phoneInput = document.getElementById('regPhone');
             if (user) {
                 document.getElementById('regName').value = user.name;
-                document.getElementById('regPhone').value = user.phone;
+                phoneInput.value = user.phone;
+                phoneInput.readOnly = true;
+                phoneInput.style.backgroundColor = 'var(--slot-bg)';
+                phoneInput.style.opacity = '0.8';
                 document.getElementById('regAddress').value = user.address;
+            } else {
+                phoneInput.readOnly = false;
+                phoneInput.style.backgroundColor = '';
+                phoneInput.style.opacity = '';
+                // تحقق لو فيه رقم محفوظ من جلسة سابقة
+                const savedPhone = localStorage.getItem('petHouseLastPhone');
+                if (savedPhone) {
+                    phoneInput.value = savedPhone;
+                }
             }
             document.getElementById('authModal').classList.add('active');
         }
@@ -884,6 +897,9 @@
                 alert('يرجى ملء جميع الحقول المطلوبة');
                 return;
             }
+
+            // حفظ الرقم بشكل دائم عشان يتملأ تلقائي في المرة الجاية
+            localStorage.setItem('petHouseLastPhone', phone);
 
             // فحص هل العميل مسجل مسبقاً بنفس رقم الهاتف
             const db = getUsersDB();
