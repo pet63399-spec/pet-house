@@ -237,6 +237,8 @@
         .time-slot.active { background:var(--accent-color); color:#fff; border-color:var(--accent-color); }
         .time-slot.booked { background:rgba(231,76,60,.1)!important; border:1px dashed rgba(231,76,60,.4)!important; color:#e74c3c!important; cursor:not-allowed!important; opacity:.65; font-size:11px; pointer-events:none; text-decoration:line-through; }
         body.dark-mode .time-slot.booked { background:rgba(231,76,60,.18)!important; border-color:rgba(231,76,60,.5)!important; color:#ff6b6b!important; }
+        .time-slot.disabled { background:rgba(0,0,0,.04)!important; border:1px solid var(--border-color)!important; color:var(--gray-color)!important; cursor:not-allowed!important; opacity:.55; font-size:11px; pointer-events:none; }
+        body.dark-mode .time-slot.disabled { background:rgba(255,255,255,.04)!important; color:#888!important; }
         .btn-confirm-booking { background:var(--accent-color); color:white; border:none; padding:12px; border-radius:10px; font-weight:800; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:5px; transition:.2s; }
         .btn-confirm-booking:hover { background:var(--accent-hover); }
 
@@ -1200,14 +1202,14 @@
 
         function removeItem(index) {
             const item = cart[index];
-            if (item && item.isService && item.date && item.time) releaseBookedSlot(item.date, item.time);
+            if (item && item.isService && (item.dateStr || item.date) && item.time) releaseBookedSlot(item.dateStr || item.date, item.time);
             cart.splice(index, 1); saveCart(); updateCart(); renderCartModal();
             if (cart.length === 0) closeCartModal();
         }
 
         function clearCart() {
             if (confirm("هل تريد تفريغ السلة؟")) {
-                cart.forEach(i => { if (i.isService && i.date && i.time) releaseBookedSlot(i.date, i.time); });
+                cart.forEach(i => { if (i.isService && (i.dateStr || i.date) && i.time) releaseBookedSlot(i.dateStr || i.date, i.time); });
                 cart = []; saveCart(); updateCart(); closeCartModal();
             }
         }
@@ -1348,7 +1350,7 @@
             } catch(e) {}
         }
 
-        // === Booking Slots (3 PM - 11 PM) ===
+        // === Booking Slots (3 PM - 11 PM) with Calendar-Date Tracking & Automatic Midnight Rollover ===
         const allTimeSlots = [
             '03:00 عصراً','03:30 عصراً',
             '04:00 عصراً','04:30 عصراً',
@@ -1360,25 +1362,144 @@
             '10:00 مساءً','10:30 مساءً',
             '11:00 مساءً'
         ];
-        function getBookedSlots() { try { return JSON.parse(localStorage.getItem('petHouseBookedSlots')) || []; } catch(e) { return []; } }
-        function saveBookedSlot(d, t) { const k = `${d}_${t}`, s = getBookedSlots(); if (!s.includes(k)) { s.push(k); localStorage.setItem('petHouseBookedSlots', JSON.stringify(s)); } }
-        function releaseBookedSlot(d, t) { const k = `${d}_${t}`; let s = getBookedSlots(); s = s.filter(x => x !== k); localStorage.setItem('petHouseBookedSlots', JSON.stringify(s)); }
-        function isSlotBooked(d, t) { return getBookedSlots().includes(`${d}_${t}`); }
 
-        let currentBooking = { name: '', price: 0, date: 'اليوم', time: '' };
+        function getLocalDateString(offsetDays = 0) {
+            const d = new Date();
+            if (offsetDays) d.setDate(d.getDate() + offsetDays);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        function normalizeBookingDate(d) {
+            if (!d || typeof d !== 'string') return getLocalDateString(0);
+            const match = d.match(/\d{4}-\d{2}-\d{2}/);
+            if (match) return match[0];
+            if (d.includes('اليوم')) return getLocalDateString(0);
+            if (d.includes('غداً') || d.includes('غدا')) return getLocalDateString(1);
+            if (d.includes('بعد غد')) return getLocalDateString(2);
+            return getLocalDateString(0);
+        }
+
+        function parseSlotTimeToMinutes(slot) {
+            if (!slot) return null;
+            const m = slot.match(/(\d+):(\d+)/);
+            if (!m) return null;
+            let hour = parseInt(m[1], 10);
+            const minute = parseInt(m[2], 10);
+            if (hour < 12 && (slot.includes('عصراً') || slot.includes('مساءً') || slot.includes('م'))) {
+                hour += 12;
+            }
+            return hour * 60 + minute;
+        }
+
+        function isSlotPastToday(dateInput, slot) {
+            const targetDate = normalizeBookingDate(dateInput);
+            const todayStr = getLocalDateString(0);
+            if (targetDate !== todayStr) return false;
+            const now = new Date();
+            const curMinutes = now.getHours() * 60 + now.getMinutes();
+            const slotMin = parseSlotTimeToMinutes(slot);
+            if (slotMin === null) return false;
+            return slotMin <= curMinutes;
+        }
+
+        function getBookedSlots() {
+            try {
+                const raw = JSON.parse(localStorage.getItem('petHouseBookedSlots')) || [];
+                const todayStr = getLocalDateString(0);
+                let changed = false;
+                // تنظيف وإلغاء أي حجز مر عليه منتصف الليل (أصبح تاريخه أقدم من تاريخ اليوم)
+                const valid = raw.filter(k => {
+                    if (!k || typeof k !== 'string') { changed = true; return false; }
+                    const parts = k.split('_');
+                    if (parts.length < 2) { changed = true; return false; }
+                    const slotDate = parts[0];
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(slotDate)) {
+                        if (slotDate < todayStr) {
+                            changed = true;
+                            return false; // انتهى موعد اليوم وتعدت الساعة 12 منتصف الليل -> يُحذف الحجز
+                        }
+                        return true;
+                    }
+                    changed = true;
+                    return false;
+                });
+                if (changed) {
+                    localStorage.setItem('petHouseBookedSlots', JSON.stringify(valid));
+                }
+                return valid;
+            } catch(e) {
+                return [];
+            }
+        }
+
+        function saveBookedSlot(d, t) {
+            const dateStr = normalizeBookingDate(d);
+            const k = `${dateStr}_${t}`;
+            const s = getBookedSlots();
+            if (!s.includes(k)) {
+                s.push(k);
+                localStorage.setItem('petHouseBookedSlots', JSON.stringify(s));
+            }
+        }
+
+        function releaseBookedSlot(d, t) {
+            const dateStr = normalizeBookingDate(d);
+            const k = `${dateStr}_${t}`;
+            let s = getBookedSlots();
+            s = s.filter(x => x !== k && x !== `${d}_${t}`);
+            localStorage.setItem('petHouseBookedSlots', JSON.stringify(s));
+        }
+
+        function isSlotBooked(d, t) {
+            const dateStr = normalizeBookingDate(d);
+            const s = getBookedSlots();
+            return s.includes(`${dateStr}_${t}`) || s.includes(`${d}_${t}`);
+        }
+
+        let currentBooking = { name: '', price: 0, date: 'اليوم', dateStr: '', time: '' };
+
+        function updateDateChips() {
+            const chips = document.querySelectorAll('.date-chip');
+            if (!chips || chips.length < 3) return;
+            const daysAr = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+            const now = new Date();
+            const d0 = new Date(now);
+            const d1 = new Date(now.getTime() + 86400000);
+            const d2 = new Date(now.getTime() + 86400000 * 2);
+            chips[0].innerHTML = `اليوم <small style="display:block;font-size:10px;font-weight:normal;opacity:0.85;">(${daysAr[d0.getDay()]})</small>`;
+            chips[1].innerHTML = `غداً <small style="display:block;font-size:10px;font-weight:normal;opacity:0.85;">(${daysAr[d1.getDay()]})</small>`;
+            chips[2].innerHTML = `بعد غد <small style="display:block;font-size:10px;font-weight:normal;opacity:0.85;">(${daysAr[d2.getDay()]})</small>`;
+        }
 
         function renderTimeSlots() {
-            const c = document.getElementById('timeSlotsContainer'); if (!c) return; c.innerHTML = '';
+            const c = document.getElementById('timeSlotsContainer');
+            if (!c) return;
+            c.innerHTML = '';
             let found = false;
+            const dateStr = normalizeBookingDate(currentBooking.date);
             allTimeSlots.forEach(slot => {
-                const booked = isSlotBooked(currentBooking.date, slot), div = document.createElement('div');
+                const booked = isSlotBooked(dateStr, slot);
+                const past = isSlotPastToday(dateStr, slot);
+                const div = document.createElement('div');
+                const displaySlot = slot.replace(' عصراً',' م').replace(' مساءً',' م');
                 if (booked) {
                     div.className = 'time-slot booked';
-                    div.innerHTML = `<i class="fa-solid fa-lock"></i> ${slot.replace(' عصراً',' م').replace(' مساءً',' م')} (محجوز)`;
+                    div.innerHTML = `<i class="fa-solid fa-lock"></i> ${displaySlot} (محجوز)`;
+                } else if (past) {
+                    div.className = 'time-slot disabled';
+                    div.title = 'انتهى موعد هذا الوقت لليوم';
+                    div.innerHTML = `<i class="fa-regular fa-clock"></i> ${displaySlot} (انتهى)`;
                 } else {
                     div.className = 'time-slot';
-                    if (!found && (!currentBooking.time || currentBooking.time === slot)) { div.classList.add('active'); currentBooking.time = slot; found = true; }
-                    div.innerHTML = slot.replace(' عصراً',' م').replace(' مساءً',' م');
+                    if (!found && (!currentBooking.time || currentBooking.time === slot)) {
+                        div.classList.add('active');
+                        currentBooking.time = slot;
+                        found = true;
+                    }
+                    div.innerHTML = displaySlot;
                     div.onclick = function() { selectTime(this, slot); };
                 }
                 c.appendChild(div);
@@ -1387,23 +1508,68 @@
         }
 
         function openBookingModal(name, price) {
-            currentBooking.name = name; currentBooking.price = price; currentBooking.date = 'اليوم'; currentBooking.time = '';
+            currentBooking.name = name;
+            currentBooking.price = price;
+            currentBooking.date = 'اليوم';
+            currentBooking.dateStr = normalizeBookingDate('اليوم');
+            currentBooking.time = '';
             document.getElementById('modalServiceName').innerText = name;
             document.getElementById('modalServicePrice').innerText = price + ' ج.م';
             document.querySelectorAll('.date-chip').forEach((el, i) => el.classList.toggle('active', i === 0));
+            updateDateChips();
             renderTimeSlots();
             document.getElementById('bookingModal').classList.add('active');
         }
-        function closeBookingModal() { document.getElementById('bookingModal').classList.remove('active'); }
-        function selectDate(el, val) { document.querySelectorAll('.date-chip').forEach(e => e.classList.remove('active')); el.classList.add('active'); currentBooking.date = val; currentBooking.time = ''; renderTimeSlots(); }
-        function selectTime(el, val) { document.querySelectorAll('.time-slot').forEach(e => e.classList.remove('active')); el.classList.add('active'); currentBooking.time = val; }
+
+        function closeBookingModal() {
+            document.getElementById('bookingModal').classList.remove('active');
+        }
+
+        function selectDate(el, val) {
+            document.querySelectorAll('.date-chip').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+            currentBooking.date = val;
+            currentBooking.dateStr = normalizeBookingDate(val);
+            currentBooking.time = '';
+            renderTimeSlots();
+        }
+
+        function selectTime(el, val) {
+            document.querySelectorAll('.time-slot').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+            currentBooking.time = val;
+        }
 
         function confirmBooking() {
-            if (!currentBooking.time) { alert('عفواً، لا يوجد موعد متاح أو يرجى اختيار موعد!'); return; }
-            if (isSlotBooked(currentBooking.date, currentBooking.time)) { alert('عفواً، هذا الموعد محجوز! اختر آخر.'); renderTimeSlots(); return; }
-            saveBookedSlot(currentBooking.date, currentBooking.time);
-            cart.push({ name: currentBooking.name, price: currentBooking.price, qty: 1, isService: true, date: currentBooking.date, time: currentBooking.time });
-            saveCart(); closeBookingModal(); updateCart();
+            if (!currentBooking.time) {
+                alert('عفواً، لا يوجد موعد متاح أو يرجى اختيار موعد!');
+                return;
+            }
+            const dateStr = normalizeBookingDate(currentBooking.date);
+            if (isSlotBooked(dateStr, currentBooking.time)) {
+                alert('عفواً، هذا الموعد محجوز! اختر موعداً آخر.');
+                renderTimeSlots();
+                return;
+            }
+            if (isSlotPastToday(dateStr, currentBooking.time)) {
+                alert('عفواً، لقد انتهى وقت هذا الموعد لليوم! يرجى اختيار موعد قادم.');
+                renderTimeSlots();
+                return;
+            }
+            saveBookedSlot(dateStr, currentBooking.time);
+            const displayDate = `${currentBooking.date} (${dateStr})`;
+            cart.push({
+                name: currentBooking.name,
+                price: currentBooking.price,
+                qty: 1,
+                isService: true,
+                date: displayDate,
+                dateStr: dateStr,
+                time: currentBooking.time
+            });
+            saveCart();
+            closeBookingModal();
+            updateCart();
         }
 
         // === Cart Modal & Automatic Distance Shipping ===
