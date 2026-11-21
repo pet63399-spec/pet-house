@@ -645,6 +645,121 @@
             background: #2563eb;
             border-color: #2563eb;
         }
+
+        /* OTP Verification Gate Styles */
+        .otp-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 16px;
+        }
+        .otp-modal-overlay.active {
+            display: flex;
+        }
+        .otp-card {
+            background: var(--card-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 420px;
+            padding: 24px 20px;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.5);
+            text-align: center;
+            animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+        .otp-icon-circle {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 122, 0, 0.12);
+            color: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            margin: 0 auto 12px auto;
+        }
+        .otp-inputs-grid {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            direction: ltr;
+            margin: 16px 0;
+        }
+        .otp-digit-input {
+            width: 52px;
+            height: 56px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 800;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--slot-bg);
+            color: var(--text-color);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .otp-digit-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(255, 122, 0, 0.35);
+            background: var(--card-bg);
+        }
+        .otp-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-120px);
+            z-index: 10000;
+            background: #1e293b;
+            color: #fff;
+            border: 1.5px solid rgba(255, 122, 0, 0.5);
+            border-radius: 16px;
+            padding: 14px 18px;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.55);
+            max-width: 90%;
+            width: 380px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .otp-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .otp-toast-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11.5px;
+            color: #94a3b8;
+        }
+        .otp-toast-body {
+            font-size: 13.5px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .otp-code-badge {
+            background: var(--accent-color);
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: 3px;
+        }
     </style>
 </head>
 <body>
@@ -1044,6 +1159,79 @@
     </div>
 
     <a class="whatsapp-float" id="whatsappFloat" href="https://wa.me/201210556177" target="_blank" title="تواصل معنا عبر الواتساب"><i class="fa-brands fa-whatsapp"></i></a>
+
+    <!-- إشعار كود التأكيد في أعلى الشاشة (OTP Toast) -->
+    <div class="otp-toast" id="otpToast">
+        <div class="otp-toast-header">
+            <span><i class="fa-solid fa-comment-sms" style="color:var(--accent-color);"></i> رسالة تأكيد Pet House</span>
+            <span>الآن</span>
+        </div>
+        <div class="otp-toast-body">
+            <span>كود التأكيد الخاص بك هو:</span>
+            <span class="otp-code-badge" id="otpToastCode">0000</span>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px;">
+            <button type="button" onclick="otpCopyCode()" style="background:rgba(255,255,255,0.15);color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;"><i class="fa-regular fa-copy"></i> نسخ الكود</button>
+            <button type="button" onclick="otpAutoFill()" style="background:var(--accent-color);color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:bold;"><i class="fa-solid fa-bolt"></i> إدخال فوري</button>
+        </div>
+    </div>
+
+    <!-- نافذة تأكيد الدخول الإجبارية بكود التحقق (OTP Gate Modal) -->
+    <div class="otp-modal-overlay" id="otpGateModal">
+        <div class="otp-card">
+            <!-- الخطوة 1: طلب الكود -->
+            <div id="otpStep1">
+                <div class="otp-icon-circle"><i class="fa-solid fa-shield-halved"></i></div>
+                <h3 style="font-size:18px;margin-bottom:6px;color:var(--text-color);">تأكيد الدخول إلى Pet House 🐾</h3>
+                <p style="font-size:13px;color:var(--gray-color);margin-bottom:16px;line-height:1.5;">أدخل رقم هاتفك لتصلك رسالة تأكيد تحتوي على كود التحقق السري</p>
+                <div style="display:flex;flex-direction:column;gap:12px;text-align:right;">
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-user"></i> اسم المستخدم:</label>
+                        <input type="text" class="form-input" id="otpNameInput" placeholder="اكتب اسمك (أو أحمد جمال)">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-phone"></i> رقم الموبايل:</label>
+                        <input type="tel" class="form-input" id="otpPhoneInput" placeholder="مثال: 01002808287" dir="ltr" style="text-align:right;">
+                    </div>
+                    <button type="button" class="btn-primary" onclick="requestOtpCode()" style="margin-top:6px;background:var(--accent-color);">
+                        <i class="fa-solid fa-paper-plane"></i> إرسال كود التأكيد
+                    </button>
+                </div>
+            </div>
+
+            <!-- الخطوة 2: إدخال الكود المكون من 4 أرقام -->
+            <div id="otpStep2" style="display:none;">
+                <div class="otp-icon-circle" style="background:rgba(39,174,96,0.12);color:#27ae60;"><i class="fa-solid fa-key"></i></div>
+                <h3 style="font-size:18px;margin-bottom:6px;color:var(--text-color);">أدخل كود التأكيد</h3>
+                <p style="font-size:13px;color:var(--gray-color);margin-bottom:12px;line-height:1.5;">تم إرسال كود التأكيد إلى: <strong id="otpDisplayPhone" style="color:var(--text-color);direction:ltr;display:inline-block;">-</strong></p>
+                
+                <div class="otp-inputs-grid">
+                    <input type="text" maxlength="1" class="otp-digit-input" id="otpDigit1" oninput="otpDigitInput(this, 1)" onkeydown="otpDigitBackspace(event, 1)" pattern="[0-9]*" inputmode="numeric">
+                    <input type="text" maxlength="1" class="otp-digit-input" id="otpDigit2" oninput="otpDigitInput(this, 2)" onkeydown="otpDigitBackspace(event, 2)" pattern="[0-9]*" inputmode="numeric">
+                    <input type="text" maxlength="1" class="otp-digit-input" id="otpDigit3" oninput="otpDigitInput(this, 3)" onkeydown="otpDigitBackspace(event, 3)" pattern="[0-9]*" inputmode="numeric">
+                    <input type="text" maxlength="1" class="otp-digit-input" id="otpDigit4" oninput="otpDigitInput(this, 4)" onkeydown="otpDigitBackspace(event, 4)" pattern="[0-9]*" inputmode="numeric">
+                </div>
+
+                <div id="otpErrorMsg" style="color:#e74c3c;font-size:12.5px;font-weight:bold;margin-bottom:10px;display:none;"></div>
+
+                <button type="button" class="btn-primary" onclick="verifyOtpCode()" style="background:#27ae60;width:100%;margin-bottom:10px;">
+                    <i class="fa-solid fa-circle-check"></i> تأكيد الكود والدخول للموقع
+                </button>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--gray-color);margin-top:6px;">
+                    <button type="button" id="btnResendOtp" onclick="resendOtpCode()" style="background:none;border:none;color:var(--accent-color);font-weight:bold;cursor:pointer;font-size:12px;text-decoration:underline;">إعادة إرسال الكود</button>
+                    <button type="button" onclick="otpBackToStep1()" style="background:none;border:none;color:var(--gray-color);cursor:pointer;font-size:12px;">تغيير الرقم</button>
+                </div>
+
+                <!-- رابط اختياري لفتح الواتساب بالكود -->
+                <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--border-color);">
+                    <a id="btnOtpWhatsAppLink" href="#" target="_blank" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#25d366;text-decoration:none;font-weight:bold;">
+                        <i class="fa-brands fa-whatsapp"></i> فتح الكود على الواتساب
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- نافذة تسجيل العميل -->
     <div class="modal-overlay" id="authModal">
@@ -1461,10 +1649,11 @@
         function logoutUser() {
             if (confirm('هل تريد تسجيل الخروج وتبديل الحساب؟')) {
                 setCurrentUser(null);
+                sessionStorage.removeItem('petHouseSessionVerified');
                 closeProfileModal();
                 closeAdminModal();
                 updateProductsStockUI();
-                openAuthModal();
+                openOtpGateModal();
             }
         }
 
@@ -2669,6 +2858,238 @@
             closeCartModal();
         }
 
+        // ===============================================
+        // === نظام التحقق من كود التأكيد (OTP Gate) ===
+        // ===============================================
+        let generatedOtpCode = '';
+        let targetOtpPhone = '';
+        let targetOtpName = '';
+        let otpCountdownInterval = null;
+
+        function checkOtpGate() {
+            const isVerified = sessionStorage.getItem('petHouseSessionVerified');
+            if (isVerified === 'true') {
+                return;
+            }
+            openOtpGateModal();
+        }
+
+        function openOtpGateModal() {
+            const modal = document.getElementById('otpGateModal');
+            if (!modal) return;
+            document.body.style.overflow = 'hidden';
+            modal.classList.add('active');
+
+            const user = getCurrentUser();
+            if (user) {
+                if (user.phone) document.getElementById('otpPhoneInput').value = user.phone;
+                if (user.name) document.getElementById('otpNameInput').value = user.name;
+            }
+            otpBackToStep1();
+        }
+
+        function otpBackToStep1() {
+            document.getElementById('otpStep1').style.display = 'block';
+            document.getElementById('otpStep2').style.display = 'none';
+            if (otpCountdownInterval) clearInterval(otpCountdownInterval);
+        }
+
+        function requestOtpCode() {
+            const phoneInput = document.getElementById('otpPhoneInput');
+            const nameInput = document.getElementById('otpNameInput');
+            let phone = phoneInput ? phoneInput.value.trim().replace(/[^\d]/g, '') : '';
+            let name = nameInput ? nameInput.value.trim() : '';
+
+            if (!phone || phone.length < 10) {
+                alert('يرجى إدخال رقم موبايل صحيح (11 رقم)');
+                return;
+            }
+
+            if (phone === ADMIN_PHONE) {
+                if (!name || name.includes('عميل')) name = 'أحمد جمال';
+            } else if (!name) {
+                name = 'عميل Pet House';
+            }
+
+            targetOtpPhone = phone;
+            targetOtpName = name;
+
+            // توليد كود تأكيد عشوائي من 4 أرقام
+            generatedOtpCode = Math.floor(1000 + Math.random() * 9000).toString();
+
+            document.getElementById('otpDisplayPhone').innerText = phone;
+            document.getElementById('otpStep1').style.display = 'none';
+            document.getElementById('otpStep2').style.display = 'block';
+
+            [1, 2, 3, 4].forEach(i => {
+                const el = document.getElementById('otpDigit' + i);
+                if (el) el.value = '';
+            });
+            setTimeout(() => {
+                const d1 = document.getElementById('otpDigit1');
+                if (d1) d1.focus();
+            }, 100);
+
+            const err = document.getElementById('otpErrorMsg');
+            if (err) err.style.display = 'none';
+
+            showOtpToast(generatedOtpCode);
+
+            const waLink = document.getElementById('btnOtpWhatsAppLink');
+            if (waLink) {
+                const waText = encodeURIComponent(`🐾 كود تأكيد الدخول الخاص بك في موقع Pet House هو: ${generatedOtpCode}`);
+                waLink.href = `https://wa.me/2${phone}?text=${waText}`;
+            }
+
+            startOtpCountdown();
+        }
+
+        function showOtpToast(code) {
+            const toast = document.getElementById('otpToast');
+            const codeEl = document.getElementById('otpToastCode');
+            if (!toast || !codeEl) return;
+            codeEl.innerText = code;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 12000);
+        }
+
+        function otpCopyCode() {
+            if (!generatedOtpCode) return;
+            navigator.clipboard.writeText(generatedOtpCode).then(() => {
+                alert(`تم نسخ كود التأكيد: ${generatedOtpCode} ✅`);
+            }).catch(() => {
+                alert(`كود التأكيد الخاص بك هو: ${generatedOtpCode}`);
+            });
+        }
+
+        function otpAutoFill() {
+            if (!generatedOtpCode || generatedOtpCode.length !== 4) return;
+            for (let i = 0; i < 4; i++) {
+                const el = document.getElementById('otpDigit' + (i + 1));
+                if (el) el.value = generatedOtpCode[i];
+            }
+            verifyOtpCode();
+        }
+
+        function otpDigitInput(input, index) {
+            input.value = input.value.replace(/[^\d]/g, '');
+            if (input.value.length >= 1 && index < 4) {
+                const next = document.getElementById('otpDigit' + (index + 1));
+                if (next) next.focus();
+            }
+            if (index === 4 && input.value.length >= 1) {
+                verifyOtpCode();
+            }
+        }
+
+        function otpDigitBackspace(e, index) {
+            if (e.key === 'Backspace' && !e.target.value && index > 1) {
+                const prev = document.getElementById('otpDigit' + (index - 1));
+                if (prev) {
+                    prev.focus();
+                    prev.value = '';
+                }
+            }
+        }
+
+        function startOtpCountdown() {
+            let seconds = 60;
+            const btn = document.getElementById('btnResendOtp');
+            if (!btn) return;
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'not-allowed';
+            btn.innerText = `إعادة الإرسال بعد (${seconds} ثانية)`;
+
+            if (otpCountdownInterval) clearInterval(otpCountdownInterval);
+            otpCountdownInterval = setInterval(() => {
+                seconds--;
+                if (seconds <= 0) {
+                    clearInterval(otpCountdownInterval);
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    btn.style.cursor = 'pointer';
+                    btn.innerText = 'إعادة إرسال كود جديد';
+                } else {
+                    btn.innerText = `إعادة الإرسال بعد (${seconds} ثانية)`;
+                }
+            }, 1000);
+        }
+
+        function resendOtpCode() {
+            const btn = document.getElementById('btnResendOtp');
+            if (btn && btn.disabled) return;
+            generatedOtpCode = Math.floor(1000 + Math.random() * 9000).toString();
+            showOtpToast(generatedOtpCode);
+            startOtpCountdown();
+            alert('تم إرسال كود تأكيد جديد بنجاح 📩');
+        }
+
+        function verifyOtpCode() {
+            const d1 = document.getElementById('otpDigit1').value.trim();
+            const d2 = document.getElementById('otpDigit2').value.trim();
+            const d3 = document.getElementById('otpDigit3').value.trim();
+            const d4 = document.getElementById('otpDigit4').value.trim();
+            const entered = d1 + d2 + d3 + d4;
+
+            const err = document.getElementById('otpErrorMsg');
+
+            if (entered.length < 4) {
+                if (err) { err.innerText = 'يرجى إدخال الأربعة أرقام بالكامل'; err.style.display = 'block'; }
+                return;
+            }
+
+            if (entered === generatedOtpCode) {
+                sessionStorage.setItem('petHouseSessionVerified', 'true');
+                if (otpCountdownInterval) clearInterval(otpCountdownInterval);
+
+                let db = getUsersDB();
+                let user = db[targetOtpPhone];
+                if (!user) {
+                    user = {
+                        name: targetOtpName,
+                        phone: targetOtpPhone,
+                        address: (targetOtpPhone === ADMIN_PHONE) ? 'شارع شكري القواتلي - إدارة Pet House' : 'المحلة الكبرى',
+                        role: (targetOtpPhone === ADMIN_PHONE) ? 'admin' : 'customer',
+                        createdAt: new Date().toISOString()
+                    };
+                } else {
+                    user.name = targetOtpName;
+                    if (targetOtpPhone === ADMIN_PHONE) user.role = 'admin';
+                }
+                setCurrentUser(user);
+
+                const modal = document.getElementById('otpGateModal');
+                if (modal) modal.classList.remove('active');
+                document.body.style.overflow = '';
+
+                const toast = document.getElementById('otpToast');
+                if (toast) toast.classList.remove('show');
+
+                updateProductsStockUI();
+
+                if (targetOtpPhone === ADMIN_PHONE) {
+                    alert('👑 أهلاً بك يا أستاذ أحمد جمال! تم تأكيد كود الدخول وتفعيل لوحة تحكم الإدارة الكاملة.');
+                } else {
+                    alert(`أهلاً بك يا ${user.name}! تم تأكيد كود الدخول بنجاح ✅`);
+                }
+            } else {
+                if (err) {
+                    err.innerText = '❌ كود التأكيد غير صحيح! تأكد من الكود المكتوب في الرسالة وأعد المحاولة.';
+                    err.style.display = 'block';
+                }
+                [1, 2, 3, 4].forEach(i => {
+                    const el = document.getElementById('otpDigit' + i);
+                    if (el) {
+                        el.style.borderColor = '#e74c3c';
+                        setTimeout(() => el.style.borderColor = '', 1500);
+                    }
+                });
+            }
+        }
+
         // === Init ===
         window.addEventListener('DOMContentLoaded', () => {
             renderUserInfo();
@@ -2676,7 +3097,8 @@
             checkReorder();
             renderSmartReminders();
             autoApplyShippingZone();
-            if (!getCurrentUser()) setTimeout(() => openAuthModal(), 500);
+            updateProductsStockUI();
+            checkOtpGate();
         });
     </script>
 </body>
