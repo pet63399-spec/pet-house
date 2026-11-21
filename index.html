@@ -1046,28 +1046,25 @@
 
     <a class="whatsapp-float" id="whatsappFloat" href="https://wa.me/201210556177" target="_blank" title="تواصل معنا عبر الواتساب"><i class="fa-brands fa-whatsapp"></i></a>
 
-    <!-- نافذة كود تأكيد دخول المدير (خاصة بمدير المتجر عبر الواتساب) -->
+    <!-- نافذة تأكيد هوية مدير المتجر برمز الأمان السري -->
     <div class="modal-overlay" id="adminOtpModal">
         <div class="modal-card" style="max-width:380px;text-align:center;">
-            <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,122,0,0.12);color:var(--accent-color);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 10px auto;">
-                <i class="fa-solid fa-lock"></i>
+            <div style="width:54px;height:54px;border-radius:50%;background:rgba(255,122,0,0.12);color:var(--accent-color);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 10px auto;">
+                <i class="fa-solid fa-user-shield"></i>
             </div>
             <h3 style="margin:0;font-size:16px;color:var(--text-color);">تأكيد هوية مدير المتجر 👑</h3>
             <p style="font-size:12.5px;color:var(--gray-color);margin:8px 0 14px 0;line-height:1.5;">
-                تم إرسال كود التأكيد في رسالة واتساب إلى رقم هاتفك الخاص. يرجى كتابة الكود هنا لتفعيل لوحة التحكم:
+                حساب الإدارة محمي برمز أمان سري خاص بك. يرجى إدخال الرمز السري لتفعيل لوحة التحكم:
             </p>
             <div class="form-group" style="margin-bottom:12px;">
-                <input type="text" id="adminOtpInput" maxlength="6" placeholder="كود التأكيد" style="text-align:center;font-size:22px;font-weight:900;letter-spacing:5px;" class="form-input" dir="ltr">
+                <input type="password" id="adminOtpInput" maxlength="12" placeholder="أدخل رمز المرور السري" style="text-align:center;font-size:20px;font-weight:900;letter-spacing:4px;" class="form-input">
             </div>
             <div id="adminOtpError" style="color:#e74c3c;font-size:12px;font-weight:bold;display:none;margin-bottom:10px;"></div>
             <button type="button" class="btn-primary" onclick="verifyAdminOtp()" style="background:var(--accent-color);width:100%;">
-                <i class="fa-solid fa-check"></i> تأكيد الكود والدخول
+                <i class="fa-solid fa-lock-open"></i> تأكيد ودخول لوحة الإدارة
             </button>
-            <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--border-color);display:flex;justify-content:space-between;align-items:center;font-size:12px;">
-                <button type="button" onclick="sendAdminOtpToWhatsApp()" style="background:none;border:none;color:#25d366;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:4px;">
-                    <i class="fa-brands fa-whatsapp"></i> فتح رسالة الواتساب بالكود
-                </button>
-                <button type="button" onclick="closeAdminOtpModal()" style="background:none;border:none;color:var(--gray-color);cursor:pointer;">
+            <div style="margin-top:12px;text-align:center;">
+                <button type="button" onclick="closeAdminOtpModal()" style="background:none;border:none;color:var(--gray-color);cursor:pointer;font-size:12px;">
                     إلغاء
                 </button>
             </div>
@@ -1293,9 +1290,12 @@
                 </div>
             </div>
 
-            <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
-                <button type="button" onclick="logoutUser()" style="padding:7px 12px;background:none;border:1px solid #e74c3c;color:#e74c3c;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج من الإدارة</button>
-                <button type="button" class="btn-primary" style="padding:7px 18px;font-size:13px;" onclick="closeAdminModal()">إغلاق اللوحة</button>
+            <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <button type="button" onclick="adminChangePinPrompt()" style="padding:7px 12px;background:none;border:1px solid #f1c40f;color:#f1c40f;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;"><i class="fa-solid fa-key"></i> تغيير رمز الأمان السري</button>
+                <div style="display:flex;gap:8px;">
+                    <button type="button" onclick="logoutUser()" style="padding:7px 12px;background:none;border:1px solid #e74c3c;color:#e74c3c;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج</button>
+                    <button type="button" class="btn-primary" style="padding:7px 18px;font-size:13px;" onclick="closeAdminModal()">إغلاق اللوحة</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1422,11 +1422,8 @@
 
             if (!phone) { alert('يرجى كتابة رقم الموبايل'); return; }
 
-            // التحقق من رقم المدير أحمد جمال بكود سري يصله على الواتساب فقط
+            // التحقق من رقم المدير أحمد جمال برمز الأمان السري
             if (phone === ADMIN_PHONE) {
-                adminSecretOtp = Math.floor(1000 + Math.random() * 9000).toString();
-                const waUrl = `https://wa.me/201002808287?text=${encodeURIComponent('🔐 كود تأكيد الدخول لإدارة Pet House الخاص بك يا أ/ أحمد هو: ' + adminSecretOtp)}`;
-                window.open(waUrl, '_blank');
                 closeAuthModal();
                 openAdminOtpModal();
                 return;
@@ -2666,9 +2663,27 @@
         }
 
         // ==============================================================
-        // === التحقق من كود مدير المتجر عبر الواتساب (خاص برقم 01002808287) ===
+        // === التحقق من رمز أمان مدير المتجر السري (خاص برقم 01002808287) ===
         // ==============================================================
-        let adminSecretOtp = '';
+        function getAdminPin() {
+            return localStorage.getItem('petHouseAdminPin') || '2808';
+        }
+
+        function adminChangePinPrompt() {
+            const current = prompt('أدخل رمز الأمان السري الحالي:');
+            if (!current) return;
+            if (current !== getAdminPin()) {
+                alert('❌ رمز الأمان الحالي غير صحيح!');
+                return;
+            }
+            const newPin = prompt('أدخل رمز الأمان السري الجديد:');
+            if (!newPin || newPin.trim().length < 4) {
+                alert('❌ الرمز السري يجب ألا يقل عن 4 أرقام أو أحرف.');
+                return;
+            }
+            localStorage.setItem('petHouseAdminPin', newPin.trim());
+            alert('✅ تم تغيير رمز الأمان السري لمدير المتجر بنجاح!');
+        }
 
         function openAdminOtpModal() {
             const m = document.getElementById('adminOtpModal');
@@ -2686,20 +2701,12 @@
             if (m) m.classList.remove('active');
         }
 
-        function sendAdminOtpToWhatsApp() {
-            if (!adminSecretOtp) {
-                adminSecretOtp = Math.floor(1000 + Math.random() * 9000).toString();
-            }
-            const waUrl = `https://wa.me/201002808287?text=${encodeURIComponent('🔐 كود تأكيد الدخول لإدارة Pet House الخاص بك يا أ/ أحمد هو: ' + adminSecretOtp)}`;
-            window.open(waUrl, '_blank');
-        }
-
         function verifyAdminOtp() {
             const inp = document.getElementById('adminOtpInput');
             const err = document.getElementById('adminOtpError');
             const val = inp ? inp.value.trim() : '';
 
-            if (val && (val === adminSecretOtp || val === '2808')) {
+            if (val && val === getAdminPin()) {
                 const adminUser = {
                     name: 'أحمد جمال',
                     phone: ADMIN_PHONE,
@@ -2711,11 +2718,11 @@
                 localStorage.setItem('petHouseLastPhone', ADMIN_PHONE);
                 closeAdminOtpModal();
                 updateProductsStockUI();
-                alert('👑 أهلاً بك يا أستاذ أحمد جمال!\nتم التحقق من كود الواتساب بنجاح وتفعيل لوحة تحكم الإدارة الكاملة.');
+                alert('👑 أهلاً بك يا أستاذ أحمد جمال!\nتم التحقق بنجاح وتفعيل لوحة تحكم الإدارة الكاملة.');
                 openAdminModal();
             } else {
                 if (err) {
-                    err.innerText = '❌ كود التأكيد غير صحيح! يرجى مراجعة رسالة الواتساب على رقمك 01002808287.';
+                    err.innerText = '❌ رمز الأمان السري غير صحيح! لا يمكن تسجيل الدخول كمدير إلا من خلال مالك الحساب.';
                     err.style.display = 'block';
                 }
                 if (inp) {
