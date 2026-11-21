@@ -500,6 +500,151 @@
         .branch-item strong {
             color: var(--primary-color);
         }
+
+        /* Admin & Out of Stock Styles */
+        .out-of-stock-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(231, 76, 60, 0.95);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            z-index: 3;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .product-card.is-out-of-stock {
+            opacity: 0.82;
+            border-color: rgba(231, 76, 60, 0.4);
+        }
+        .product-card.is-out-of-stock .product-img {
+            filter: grayscale(70%);
+        }
+        .btn-action.btn-disabled-stock {
+            background: rgba(0, 0, 0, 0.08) !important;
+            color: var(--gray-color) !important;
+            border: 1px dashed var(--border-color) !important;
+            cursor: not-allowed !important;
+            box-shadow: none !important;
+            pointer-events: none;
+        }
+        body.dark-mode .btn-action.btn-disabled-stock {
+            background: rgba(255, 255, 255, 0.06) !important;
+            color: #888 !important;
+        }
+        .admin-card-control {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed rgba(241, 196, 15, 0.6);
+            display: none;
+        }
+        .btn-admin-stock {
+            width: 100%;
+            padding: 7px 10px;
+            border-radius: 8px;
+            font-size: 11.5px;
+            font-weight: 800;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn-admin-stock.stock-in {
+            background: rgba(39, 174, 96, 0.15);
+            color: #27ae60;
+            border: 1px solid #27ae60;
+        }
+        .btn-admin-stock.stock-in:hover {
+            background: #27ae60;
+            color: #fff;
+        }
+        .btn-admin-stock.stock-out {
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+        .btn-admin-stock.stock-out:hover {
+            background: #e74c3c;
+            color: #fff;
+        }
+        .admin-floating-btn {
+            position: fixed;
+            bottom: 85px;
+            left: 20px;
+            z-index: 999;
+            background: #2c3e50;
+            color: #f1c40f;
+            border: 2px solid #f1c40f;
+            padding: 10px 16px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 13px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.35);
+            display: none;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .admin-floating-btn:hover {
+            transform: scale(1.05);
+            background: #1a252f;
+        }
+        .admin-pill-btn {
+            display: none;
+            background: #2c3e50 !important;
+            color: #f1c40f !important;
+            border: 1.5px solid #f1c40f !important;
+        }
+        .admin-pill-btn:hover {
+            background: #1a252f !important;
+        }
+        .time-slot.booked.admin-slot {
+            pointer-events: auto !important;
+            cursor: pointer !important;
+            border: 1px dashed #e74c3c !important;
+            background: rgba(231, 76, 60, 0.18) !important;
+            text-decoration: none !important;
+            position: relative;
+        }
+        .time-slot.booked.admin-slot:hover {
+            background: #e74c3c !important;
+            color: #fff !important;
+            transform: scale(1.03);
+        }
+        .admin-tab-btn {
+            flex: 1;
+            padding: 9px 12px;
+            border: 1px solid var(--border-color);
+            background: var(--slot-bg);
+            color: var(--text-color);
+            border-radius: 8px;
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .admin-tab-btn.active {
+            background: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+        }
+        body.dark-mode .admin-tab-btn.active {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
     </style>
 </head>
 <body>
@@ -509,6 +654,9 @@
     <header>
         <a href="#" class="logo"><img src="logo.png" alt="Pet House"></a>
         <div class="header-actions">
+            <button class="user-pill-btn admin-pill-btn" id="adminHeaderBtn" onclick="openAdminModal()">
+                <i class="fa-solid fa-crown"></i><span>لوحة الإدارة</span>
+            </button>
             <button class="user-pill-btn" id="userPillBtn" onclick="openProfileModal()">
                 <i class="fa-solid fa-user"></i><span id="headerUserName">حسابي</span>
             </button>
@@ -907,7 +1055,7 @@
             <div style="font-size:13px;color:var(--gray-color);line-height:1.5;">أهلاً بك في <strong>Pet House</strong>! سجّل بياناتك لسهولة وسرعة توصيل الطلبات وحجز المواعيد.</div>
             <form onsubmit="handleRegistration(event)" style="display:flex;flex-direction:column;gap:12px;">
                 <div class="form-group"><label><i class="fa-solid fa-user"></i> اسم العميل:</label><input type="text" class="form-input" id="regName" placeholder="مثال: أحمد محمد" required></div>
-                <div class="form-group"><label><i class="fa-solid fa-phone"></i> رقم الموبايل / واتساب:</label><input type="tel" class="form-input" id="regPhone" placeholder="مثال: 01012345678" required></div>
+                <div class="form-group"><label><i class="fa-solid fa-phone"></i> رقم الموبايل / واتساب:</label><input type="tel" class="form-input" id="regPhone" placeholder="مثال: 01012345678" oninput="checkPhoneAdminInput(this)" required></div>
                 <div class="form-group">
                     <label><i class="fa-solid fa-location-dot"></i> العنوان بالتفصيل (المنطقة / الحي):</label>
                     <input type="text" class="form-input" id="regAddress" placeholder="مثال: الشعبية، الشون، شكري القواتلي، محلة البرج..." required>
@@ -923,6 +1071,11 @@
                 </div>
                 <button type="submit" class="btn-primary" style="margin-top:5px;"><i class="fa-solid fa-check-circle"></i> تأكيد وحفظ الحساب</button>
                 <button type="button" class="btn-secondary" onclick="closeAuthModal()">تصفح كزائر مؤقتاً</button>
+                <div style="text-align:center;margin-top:6px;padding-top:8px;border-top:1px dashed var(--border-color);">
+                    <button type="button" onclick="adminQuickLogin()" style="background:none;border:none;color:var(--gray-color);font-size:11.5px;cursor:pointer;text-decoration:underline;">
+                        <i class="fa-solid fa-crown" style="color:#f1c40f;"></i> تسجيل دخول المدير (أ/ أحمد جمال - 01002808287)
+                    </button>
+                </div>
             </form>
         </div>
     </div>
@@ -1066,6 +1219,66 @@
         </div>
     </div>
 
+    <!-- نافذة لوحة تحكم الإدارة (أحمد جمال) -->
+    <div class="modal-overlay" id="adminModal">
+        <div class="modal-card" style="max-width: 620px; max-height: 88vh; overflow-y: auto;">
+            <div class="modal-header" style="border-bottom: 2px solid #f1c40f; padding-bottom: 12px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:40px;height:40px;border-radius:50%;background:#f1c40f;color:#2c3e50;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 2px 8px rgba(241,196,15,0.4);"><i class="fa-solid fa-crown"></i></div>
+                    <div>
+                        <h3 style="margin:0;font-size:16px;color:var(--text-color);">لوحة تحكم مدير المتجر 👑</h3>
+                        <div style="font-size:12px;color:var(--gray-color);">أهلاً أ/ أحمد جمال (01002808287)</div>
+                    </div>
+                </div>
+                <button class="btn-close-modal" onclick="closeAdminModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- أزرار التبويبات -->
+            <div style="display:flex;gap:6px;margin:14px 0 12px 0;">
+                <button type="button" class="admin-tab-btn active" id="adminTabBtnProducts" onclick="switchAdminTab('products')"><i class="fa-solid fa-boxes-stacked"></i> البضاعة والكميات</button>
+                <button type="button" class="admin-tab-btn" id="adminTabBtnGrooming" onclick="switchAdminTab('grooming')"><i class="fa-solid fa-calendar-check"></i> حجوزات الجرومينج</button>
+                <button type="button" class="admin-tab-btn" id="adminTabBtnOrders" onclick="switchAdminTab('orders')"><i class="fa-solid fa-receipt"></i> سجل الطلبات</button>
+            </div>
+
+            <!-- تبويب 1: البضاعة -->
+            <div id="adminTabContentProducts">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:8px 12px;background:var(--slot-bg);border:1px solid var(--border-color);border-radius:10px;">
+                    <span style="font-size:12.5px;font-weight:700;color:var(--text-color);"><i class="fa-solid fa-circle-info" style="color:var(--accent-color);"></i> اضغط على أي منتج لتبديل حالته فوراً</span>
+                    <button type="button" onclick="adminResetAllStock()" style="padding:5px 10px;font-size:11.5px;border-radius:6px;border:1px solid #27ae60;background:rgba(39,174,96,0.12);color:#27ae60;cursor:pointer;font-weight:bold;"><i class="fa-solid fa-check-double"></i> جعل الكل متوفر</button>
+                </div>
+                <div id="adminProductsList" style="display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto;padding-left:2px;">
+                    <!-- dynamic -->
+                </div>
+            </div>
+
+            <!-- تبويب 2: حجوزات الجرومينج -->
+            <div id="adminTabContentGrooming" style="display:none;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:8px 12px;background:var(--slot-bg);border:1px solid var(--border-color);border-radius:10px;">
+                    <span style="font-size:12.5px;font-weight:700;color:var(--text-color);"><i class="fa-solid fa-calendar-days" style="color:var(--accent-color);"></i> إدارة المواعيد المحجوزة</span>
+                    <button type="button" onclick="adminClearAllBookings()" style="padding:5px 10px;font-size:11.5px;border-radius:6px;border:1px solid #e74c3c;background:rgba(231,76,60,0.12);color:#e74c3c;cursor:pointer;font-weight:bold;"><i class="fa-solid fa-trash-can"></i> تفريغ جميع الحجوزات</button>
+                </div>
+                <div id="adminBookingsList" style="display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto;padding-left:2px;">
+                    <!-- dynamic -->
+                </div>
+            </div>
+
+            <!-- تبويب 3: سجل الطلبات -->
+            <div id="adminTabContentOrders" style="display:none;">
+                <div id="adminOrdersList" style="display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto;padding-left:2px;">
+                    <!-- dynamic -->
+                </div>
+            </div>
+
+            <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
+                <button type="button" onclick="logoutUser()" style="padding:7px 12px;background:none;border:1px solid #e74c3c;color:#e74c3c;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;"><i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج من الإدارة</button>
+                <button type="button" class="btn-primary" style="padding:7px 18px;font-size:13px;" onclick="closeAdminModal()">إغلاق اللوحة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- زر لوحة الإدارة العائم لأحمد جمال -->
+    <button id="adminFloatingBtn" onclick="openAdminModal()" class="admin-floating-btn"><i class="fa-solid fa-crown"></i> لوحة الإدارة (أحمد جمال)</button>
+
     <!-- شريط السلة العائم -->
     <div class="cart-bar" id="cartBar" style="display:none;">
         <div class="cart-info" onclick="openCartModal()">
@@ -1078,7 +1291,10 @@
     </div>
 
     <script>
-        // === Users DB ===
+        // === Users DB & Admin (أحمد جمال) ===
+        const ADMIN_PHONE = '01002808287';
+        const ADMIN_NAME = 'أحمد جمال';
+
         function getUsersDB() { try { return JSON.parse(localStorage.getItem('petHouseUsersDB')) || {}; } catch(e) { return {}; } }
         function saveUsersDB(db) { localStorage.setItem('petHouseUsersDB', JSON.stringify(db)); }
         function getCurrentUser() { try { return JSON.parse(localStorage.getItem('petHouseCurrentUser')) || null; } catch(e) { return null; } }
@@ -1088,13 +1304,61 @@
             renderUserInfo();
         }
 
+        function isAdmin() {
+            const u = getCurrentUser();
+            if (!u || !u.phone) return false;
+            const clean = String(u.phone).replace(/[^\d]/g, '');
+            return clean === ADMIN_PHONE;
+        }
+
+        function checkPhoneAdminInput(input) {
+            if (!input) return;
+            const clean = input.value.replace(/[^\d]/g, '');
+            if (clean === ADMIN_PHONE) {
+                const n = document.getElementById('regName');
+                const a = document.getElementById('regAddress');
+                if (n && (!n.value || n.value.includes('عميل'))) n.value = 'أحمد جمال';
+                if (a && !a.value) a.value = 'شارع شكري القواتلي - إدارة Pet House';
+            }
+        }
+
+        function adminQuickLogin() {
+            const adminUser = {
+                name: 'أحمد جمال',
+                phone: ADMIN_PHONE,
+                address: 'شارع شكري القواتلي - إدارة Pet House',
+                role: 'admin',
+                createdAt: new Date().toISOString()
+            };
+            setCurrentUser(adminUser);
+            localStorage.setItem('petHouseLastPhone', ADMIN_PHONE);
+            closeAuthModal();
+            updateProductsStockUI();
+            alert('👑 أهلاً بك يا أستاذ أحمد جمال!\nتم تسجيل الدخول بصلاحيات مدير الموقع الكاملة.');
+            openAdminModal();
+        }
+
         function renderUserInfo() {
             const user = getCurrentUser();
             const h = document.getElementById('headerUserName');
             const bar = document.getElementById('userLoyaltyBar');
             const b = document.getElementById('barUserName');
-            if (user) { h.innerText = user.name.split(' ')[0]; b.innerText = user.name; bar.style.display = 'flex'; }
-            else { h.innerText = 'دخول / تسجيل'; b.innerText = 'عميلنا العزيز'; }
+            const admin = isAdmin();
+
+            if (user) {
+                if (admin) {
+                    h.innerHTML = '<i class="fa-solid fa-crown" style="color:#f1c40f;"></i> أ/ أحمد جمال';
+                    b.innerHTML = '<strong>أ/ أحمد جمال (مدير المتجر) 👑</strong> — وضع التحكم والإدارة مفعل';
+                } else {
+                    h.innerText = user.name.split(' ')[0];
+                    b.innerText = user.name;
+                }
+                bar.style.display = 'flex';
+            } else {
+                h.innerText = 'دخول / تسجيل';
+                b.innerText = 'عميلنا العزيز';
+            }
+            updateProductsStockUI();
         }
 
         // === Doctor Badge (3 PM - 11 PM) ===
@@ -1149,13 +1413,40 @@
 
         function handleRegistration(e) {
             e.preventDefault();
-            const name = document.getElementById('regName').value.trim();
-            const phone = document.getElementById('regPhone').value.trim();
-            const address = document.getElementById('regAddress').value.trim();
+            let name = document.getElementById('regName').value.trim();
+            const rawPhone = document.getElementById('regPhone').value.trim();
+            const phone = rawPhone.replace(/[^\d]/g, '');
+            let address = document.getElementById('regAddress').value.trim();
             const petName = document.getElementById('petName').value.trim();
             const petType = document.getElementById('petType').value;
             const petAge = document.getElementById('petAge').value.trim();
-            if (!name || !phone || !address) { alert('يرجى ملء جميع الحقول المطلوبة'); return; }
+
+            if (!phone) { alert('يرجى كتابة رقم الموبايل'); return; }
+
+            // التحقق من رقم المدير أحمد جمال
+            if (phone === ADMIN_PHONE) {
+                if (!name || name.includes('عميل')) name = 'أحمد جمال';
+                if (!address) address = 'شارع شكري القواتلي - إدارة Pet House';
+                const adminUser = {
+                    name: 'أحمد جمال',
+                    phone: ADMIN_PHONE,
+                    address: address,
+                    role: 'admin',
+                    petName: petName || 'Pet House',
+                    petType: petType || '',
+                    petAge: petAge || '',
+                    createdAt: new Date().toISOString()
+                };
+                setCurrentUser(adminUser);
+                localStorage.setItem('petHouseLastPhone', ADMIN_PHONE);
+                closeAuthModal();
+                updateProductsStockUI();
+                alert('👑 أهلاً بك يا أستاذ أحمد جمال!\nتم تسجيل الدخول بصلاحيات مدير الموقع الكاملة (التحكم في البضاعة وحجوزات الجرومينج).');
+                openAdminModal();
+                return;
+            }
+
+            if (!name || !address) { alert('يرجى ملء جميع الحقول المطلوبة'); return; }
             localStorage.setItem('petHouseLastPhone', phone);
             const db = getUsersDB();
             let user = db[phone];
@@ -1163,10 +1454,19 @@
             else { user = { name, phone, address, petName, petType, petAge, createdAt: new Date().toISOString() }; }
             setCurrentUser(user);
             autoApplyShippingZone();
+            updateProductsStockUI();
             closeAuthModal();
         }
         function editProfile() { closeProfileModal(); openAuthModal(); }
-        function logoutUser() { if (confirm('هل تريد تسجيل الخروج وتبديل الحساب؟')) { setCurrentUser(null); closeProfileModal(); openAuthModal(); } }
+        function logoutUser() {
+            if (confirm('هل تريد تسجيل الخروج وتبديل الحساب؟')) {
+                setCurrentUser(null);
+                closeProfileModal();
+                closeAdminModal();
+                updateProductsStockUI();
+                openAuthModal();
+            }
+        }
 
         // === Greeting ===
         function updateGreeting() {
@@ -1187,6 +1487,10 @@
         function saveCart() { localStorage.setItem('petHouseCart', JSON.stringify(cart)); }
 
         function addItem(name, price) {
+            if (isOutOfStock(name)) {
+                alert(`عفواً، منتج "${name}" نفذت كميته حالياً وغير متوفر في المتجر.`);
+                return;
+            }
             const existing = cart.find(i => i.name === name && !i.isService);
             if (existing) { existing.qty = (existing.qty || 1) + 1; }
             else { cart.push({ name, price, qty: 1, isService: false }); }
@@ -1487,7 +1791,16 @@
                 const displaySlot = slot.replace(' عصراً',' م').replace(' مساءً',' م');
                 if (booked) {
                     div.className = 'time-slot booked';
-                    div.innerHTML = `<i class="fa-solid fa-lock"></i> ${displaySlot} (محجوز)`;
+                    if (isAdmin()) {
+                        div.classList.add('admin-slot');
+                        div.title = 'أنت كمدير: اضغط لإلغاء هذا الحجز وإتاحته فوراً للعملاء 🔓';
+                        div.innerHTML = `<i class="fa-solid fa-unlock"></i> ${displaySlot} (محجوز - إلغاء؟)`;
+                        div.onclick = function() {
+                            adminCancelBookingSlot(dateStr, slot);
+                        };
+                    } else {
+                        div.innerHTML = `<i class="fa-solid fa-lock"></i> ${displaySlot} (محجوز)`;
+                    }
                 } else if (past) {
                     div.className = 'time-slot disabled';
                     div.title = 'انتهى موعد هذا الوقت لليوم';
@@ -1625,6 +1938,10 @@
         }
 
         function addTreatsUpsell() {
+            if (isOutOfStock(TREATS_NAME)) {
+                alert('عفواً، التريتس غير متوفرة حالياً!');
+                return;
+            }
             const existing = cart.find(i => i.name === TREATS_NAME && !i.isService);
             if (existing) {
                 existing.qty = (existing.qty || 1) + 1;
@@ -1666,11 +1983,12 @@
                 list.appendChild(row);
             });
 
-            // إخفاء أو إظهار شريط عرض التريتس (35 ج.م) إذا كان موجوداً بالسلة
+            // إخفاء أو إظهار شريط عرض التريتس (35 ج.م) إذا كان موجوداً بالسلة أو نافذاً
             const hasTreats = cart.some(i => i.name === TREATS_NAME && !i.isService);
+            const treatsOutOfStock = isOutOfStock(TREATS_NAME);
             const upsellBanner = document.getElementById('cartUpsellBanner');
             if (upsellBanner) {
-                upsellBanner.style.display = hasTreats ? 'none' : 'flex';
+                upsellBanner.style.display = (hasTreats || treatsOutOfStock) ? 'none' : 'flex';
             }
 
             updateCartTotals();
@@ -1682,6 +2000,263 @@
             if (e.target === document.getElementById('authModal')) closeAuthModal();
             if (e.target === document.getElementById('profileModal')) closeProfileModal();
             if (e.target === document.getElementById('orderSuccessModal')) closeOrderSuccessModal();
+            if (e.target === document.getElementById('adminModal')) closeAdminModal();
+        }
+
+        // ==========================================
+        // === لوحة تحكم وإدارة المتجر (أحمد جمال) ===
+        // ==========================================
+        const ALL_STORE_PRODUCTS = [
+            { name: 'Chat & Chat Sterilized', category: 'أكياس دراي فود', price: 260 },
+            { name: 'Chat & Chat لحمة', category: 'أكياس دراي فود', price: 240 },
+            { name: 'Chat & Chat فراخ', category: 'أكياس دراي فود', price: 240 },
+            { name: 'Chat & Chat تونة', category: 'أكياس دراي فود', price: 240 },
+            { name: 'Bewi Cat Sterilized', category: 'أكياس دراي فود', price: 450 },
+            { name: 'Club 4 Paws Kitten 2kg', category: 'أكياس دراي فود', price: 950 },
+            { name: 'Soft Friskies', category: 'أكل رطب (ويت فود)', price: 35 },
+            { name: 'Soft Tommy', category: 'أكل رطب (ويت فود)', price: 35 },
+            { name: 'Soft Pro Cat', category: 'أكل رطب (ويت فود)', price: 35 },
+            { name: 'رمل جولد 10 كيلو', category: 'رمل قطط', price: 160 },
+            { name: 'رمل جولد 5 كيلو', category: 'رمل قطط', price: 85 },
+            { name: 'رمل بنتي ساند 10 كيلو', category: 'رمل قطط', price: 150 },
+            { name: 'رمل بنتي ساند 5 كيلو', category: 'رمل قطط', price: 80 },
+            { name: 'تريتس مكافآت للحيوانات الأليفة', category: 'مكافآت وتريتس', price: 35 }
+        ];
+
+        function getOutOfStockItems() {
+            try { return JSON.parse(localStorage.getItem('petHouseOutOfStock')) || []; }
+            catch(e) { return []; }
+        }
+
+        function isOutOfStock(name) {
+            return getOutOfStockItems().includes(name);
+        }
+
+        function adminToggleStock(pName) {
+            if (!isAdmin()) {
+                alert('صلاحية المدير فقط (أ/ أحمد جمال)');
+                return;
+            }
+            let list = getOutOfStockItems();
+            if (list.includes(pName)) {
+                list = list.filter(x => x !== pName);
+            } else {
+                list.push(pName);
+            }
+            localStorage.setItem('petHouseOutOfStock', JSON.stringify(list));
+            updateProductsStockUI();
+            renderAdminProductsList();
+            renderCartModal();
+        }
+
+        function adminResetAllStock() {
+            if (!isAdmin()) return;
+            if (confirm('هل تريد إعادة تعيين جميع المنتجات لتكون "متوفرة" بالكامل؟')) {
+                localStorage.setItem('petHouseOutOfStock', JSON.stringify([]));
+                updateProductsStockUI();
+                renderAdminProductsList();
+                renderCartModal();
+                alert('تم تعيين جميع المنتجات كـ متوفرة بنجاح ✅');
+            }
+        }
+
+        function updateProductsStockUI() {
+            const admin = isAdmin();
+            const outList = getOutOfStockItems();
+
+            document.querySelectorAll('.product-card').forEach(card => {
+                const btn = card.querySelector('.btn-action');
+                if (!btn) return;
+                const onclickAttr = btn.getAttribute('onclick') || '';
+                const match = onclickAttr.match(/addItem\(\s*['"]([^'"]+)['"]/);
+                if (!match) return;
+                const pName = match[1];
+
+                const out = outList.includes(pName);
+                let badge = card.querySelector('.out-of-stock-badge');
+                let adminCtrl = card.querySelector('.admin-card-control');
+
+                if (out) {
+                    card.classList.add('is-out-of-stock');
+                    if (!badge) {
+                        badge = document.createElement('div');
+                        badge.className = 'out-of-stock-badge';
+                        badge.innerHTML = '<i class="fa-solid fa-ban"></i> نفذت الكمية';
+                        card.style.position = 'relative';
+                        card.insertBefore(badge, card.firstChild);
+                    } else {
+                        badge.style.display = 'flex';
+                    }
+                    btn.disabled = true;
+                    btn.classList.add('btn-disabled-stock');
+                    btn.innerHTML = '<i class="fa-solid fa-ban"></i> غير متوفر حالياً';
+                } else {
+                    card.classList.remove('is-out-of-stock');
+                    if (badge) badge.style.display = 'none';
+                    btn.disabled = false;
+                    btn.classList.remove('btn-disabled-stock');
+                    btn.innerHTML = '<i class="fa-solid fa-plus"></i> إضافة';
+                }
+
+                // شريط تحكم المدير داخل الكارت
+                if (admin) {
+                    if (!adminCtrl) {
+                        adminCtrl = document.createElement('div');
+                        adminCtrl.className = 'admin-card-control';
+                        const body = card.querySelector('.product-body');
+                        if (body) body.appendChild(adminCtrl);
+                    }
+                    adminCtrl.style.display = 'block';
+                    if (out) {
+                        adminCtrl.innerHTML = `<button type="button" class="btn-admin-stock stock-out" onclick="event.stopPropagation(); adminToggleStock('${pName}')" title="اضغط لجعله متوفراً"><i class="fa-solid fa-toggle-off"></i> نفذت (اضغط للإتاحة ✅)</button>`;
+                    } else {
+                        adminCtrl.innerHTML = `<button type="button" class="btn-admin-stock stock-in" onclick="event.stopPropagation(); adminToggleStock('${pName}')" title="اضغط لجعله غير متوفر"><i class="fa-solid fa-toggle-on"></i> متوفر (اضغط للتعطيل ❌)</button>`;
+                    }
+                } else {
+                    if (adminCtrl) adminCtrl.style.display = 'none';
+                }
+            });
+
+            // تحديث الأزرار العلوية والعائمة للمدير
+            const floatingBtn = document.getElementById('adminFloatingBtn');
+            if (floatingBtn) floatingBtn.style.display = admin ? 'flex' : 'none';
+            const headerAdminBtn = document.getElementById('adminHeaderBtn');
+            if (headerAdminBtn) headerAdminBtn.style.display = admin ? 'flex' : 'none';
+        }
+
+        function openAdminModal() {
+            if (!isAdmin()) {
+                alert('عفواً، يجب تسجيل الدخول برقم المدير (01002808287) للوصول للوحة التحكم.');
+                openAuthModal();
+                return;
+            }
+            renderAdminProductsList();
+            renderAdminBookingsList();
+            renderAdminOrdersList();
+            document.getElementById('adminModal').classList.add('active');
+        }
+
+        function closeAdminModal() {
+            const m = document.getElementById('adminModal');
+            if (m) m.classList.remove('active');
+        }
+
+        function switchAdminTab(tab) {
+            ['products', 'grooming', 'orders'].forEach(t => {
+                const btn = document.getElementById('adminTabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+                const pane = document.getElementById('adminTabContent' + t.charAt(0).toUpperCase() + t.slice(1));
+                if (btn) btn.classList.toggle('active', t === tab);
+                if (pane) pane.style.display = (t === tab) ? 'block' : 'none';
+            });
+        }
+
+        function renderAdminProductsList() {
+            const list = document.getElementById('adminProductsList');
+            if (!list) return;
+            const outList = getOutOfStockItems();
+            let html = '';
+            ALL_STORE_PRODUCTS.forEach(p => {
+                const isOut = outList.includes(p.name);
+                html += `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--slot-bg);border:1px solid var(--border-color);border-radius:10px;gap:10px;">
+                        <div style="display:flex;align-items:center;gap:10px;flex:1;">
+                            <div style="font-size:20px;">${p.category.includes('رمل') ? '🏖️' : p.category.includes('دراي') ? '🐱' : p.category.includes('رطب') ? '🥫' : '🍖'}</div>
+                            <div>
+                                <div style="font-weight:bold;font-size:13.5px;color:var(--text-color);">${p.name}</div>
+                                <div style="font-size:11.5px;color:var(--gray-color);">${p.category} • ${p.price} ج.م</div>
+                            </div>
+                        </div>
+                        <div>
+                            <button type="button" onclick="adminToggleStock('${p.name}')" style="padding:7px 12px;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;border:none;display:flex;align-items:center;gap:6px;${isOut ? 'background:#e74c3c;color:#fff;' : 'background:#27ae60;color:#fff;'}">
+                                ${isOut ? '<i class="fa-solid fa-ban"></i> نفذت (اجعله متوفر)' : '<i class="fa-solid fa-check"></i> متوفر (اجعله نفذ)'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+
+        function renderAdminBookingsList() {
+            const list = document.getElementById('adminBookingsList');
+            if (!list) return;
+            const slots = getBookedSlots();
+            if (slots.length === 0) {
+                list.innerHTML = `<div style="text-align:center;padding:25px;color:var(--gray-color);font-size:13.5px;"><i class="fa-regular fa-calendar-check" style="font-size:28px;margin-bottom:8px;color:#27ae60;display:block;"></i>لا توجد أي مواعيد محجوزة حالياً. جميع المواعيد متاحة بالكامل!</div>`;
+                return;
+            }
+            let html = '';
+            const todayStr = getLocalDateString(0);
+            const tomStr = getLocalDateString(1);
+
+            slots.forEach(k => {
+                const parts = k.split('_');
+                const slotDate = parts[0];
+                const slotTime = parts[1] || '';
+                let dayLabel = slotDate;
+                if (slotDate === todayStr) dayLabel = 'اليوم (' + slotDate + ')';
+                else if (slotDate === tomStr) dayLabel = 'غداً (' + slotDate + ')';
+
+                html += `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--slot-bg);border:1px solid var(--border-color);border-radius:10px;gap:8px;">
+                        <div>
+                            <div style="font-weight:bold;font-size:14px;color:var(--text-color);"><i class="fa-regular fa-clock" style="color:var(--accent-color);"></i> ${slotTime}</div>
+                            <div style="font-size:12px;color:var(--gray-color);"><i class="fa-regular fa-calendar"></i> ${dayLabel}</div>
+                        </div>
+                        <button type="button" onclick="adminCancelBookingSlot('${slotDate}', '${slotTime}')" style="background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid #e74c3c;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-unlock"></i> إلغاء الحجز وإتاحته</button>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+
+        function adminCancelBookingSlot(dateStr, slotTime) {
+            if (!isAdmin()) return;
+            if (confirm(`أ/ أحمد جمال، هل تريد إلغاء حجز موعد "${slotTime}" بتاريخ "${dateStr}" وجعله متاحاً للعملاء؟`)) {
+                releaseBookedSlot(dateStr, slotTime);
+                alert(`تم إلغاء الحجز بنجاح وأصبح موعد "${slotTime}" متاحاً الآن للعملاء ✅`);
+                renderAdminBookingsList();
+                renderTimeSlots();
+            }
+        }
+
+        function adminClearAllBookings() {
+            if (!isAdmin()) return;
+            if (confirm('تحذير: هل أنت متأكد من تفريغ وإلغاء جميع حجوزات الجرومينج بالكامل؟')) {
+                localStorage.setItem('petHouseBookedSlots', JSON.stringify([]));
+                alert('تم تفريغ وإتاحة جميع مواعيد الجرومينج بنجاح ✅');
+                renderAdminBookingsList();
+                renderTimeSlots();
+            }
+        }
+
+        function renderAdminOrdersList() {
+            const list = document.getElementById('adminOrdersList');
+            if (!list) return;
+            try {
+                const orders = JSON.parse(localStorage.getItem('petHouseOrdersHistory')) || [];
+                if (orders.length === 0) {
+                    list.innerHTML = `<div style="text-align:center;padding:25px;color:var(--gray-color);font-size:13.5px;">لا توجد طلبات مسجلة بعد في هذا المتصفح.</div>`;
+                    return;
+                }
+                let html = '';
+                orders.slice().reverse().forEach(o => {
+                    html += `
+                        <div style="padding:12px;background:var(--slot-bg);border:1px solid var(--border-color);border-radius:10px;font-size:13px;">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-weight:bold;">
+                                <span style="color:var(--accent-color);">#${o.id}</span>
+                                <span style="color:#27ae60;">${o.grandTotal} ج.م</span>
+                            </div>
+                            <div style="color:var(--text-color);margin-bottom:4px;">👤 العميل: ${o.user?.name || 'غير محدد'} (${o.user?.phone || '-'})</div>
+                            <div style="color:var(--gray-color);font-size:11.5px;">📍 العنوان: ${o.user?.address || '-'} (${o.shippingArea || ''})</div>
+                            <div style="color:var(--gray-color);font-size:11.5px;margin-top:4px;">📦 الأصناف: ${o.items?.map(i => i.name + ' (' + (i.qty || 1) + ')').join(', ')}</div>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            } catch(e) {
+                list.innerHTML = `<div style="color:red;padding:15px;">خطأ في قراءة السجل</div>`;
+            }
         }
 
         // ==========================================
