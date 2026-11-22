@@ -7,6 +7,9 @@
     <link rel="icon" type="image/png" href="logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase Web SDK (Compat CDN) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <style>
         :root {
             --primary-color: #111827;
@@ -1257,8 +1260,8 @@
             <!-- أزرار التبويبات -->
             <div style="display:flex;gap:6px;margin:14px 0 12px 0;">
                 <button type="button" class="admin-tab-btn active" id="adminTabBtnProducts" onclick="switchAdminTab('products')"><i class="fa-solid fa-boxes-stacked"></i> البضاعة والكميات</button>
-                <button type="button" class="admin-tab-btn" id="adminTabBtnGrooming" onclick="switchAdminTab('grooming')"><i class="fa-solid fa-calendar-check"></i> حجوزات الجرومينج</button>
-                <button type="button" class="admin-tab-btn" id="adminTabBtnOrders" onclick="switchAdminTab('orders')"><i class="fa-solid fa-receipt"></i> سجل الطلبات</button>
+                <button type="button" class="admin-tab-btn" id="adminTabBtnGrooming" onclick="switchAdminTab('grooming')"><i class="fa-solid fa-calendar-check"></i> حجوزات الجرومينج <span id="adminBookingsBadge" style="display:none;background:var(--accent-color);color:#fff;font-size:10.5px;padding:2px 7px;border-radius:10px;margin-right:4px;font-weight:bold;">0</span></button>
+                <button type="button" class="admin-tab-btn" id="adminTabBtnOrders" onclick="switchAdminTab('orders')"><i class="fa-solid fa-receipt"></i> سجل الطلبات <span id="adminOrdersBadge" style="display:none;background:#e74c3c;color:#fff;font-size:10.5px;padding:2px 7px;border-radius:10px;margin-right:4px;font-weight:bold;">0</span></button>
             </div>
 
             <!-- تبويب 1: البضاعة -->
@@ -1315,6 +1318,32 @@
     </div>
 
     <script>
+        // ==============================================================
+        // === إعدادات وربط Firebase Realtime Database (CDN) ===
+        // ==============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAniFnMv72pZOWqPuISUgX_I9cNkoGjAJ4",
+            authDomain: "pethouse-6ff4d.firebaseapp.com",
+            databaseURL: "https://pethouse-6ff4d-default-rtdb.firebaseio.com",
+            projectId: "pethouse-6ff4d",
+            storageBucket: "pethouse-6ff4d.firebasestorage.app",
+            messagingSenderId: "336831592364",
+            appId: "1:336831592364:web:3774b40d35a08731e86a09",
+            measurementId: "G-4GYJNPW8W4"
+        };
+
+        let db = null;
+        try {
+            if (typeof firebase !== 'undefined') {
+                if (!firebase.apps || !firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.database();
+            }
+        } catch(err) {
+            console.warn("Firebase init notice:", err);
+        }
+
         // === Users DB & Admin (أحمد جمال) ===
         const ADMIN_PHONE = '01002808287';
         const ADMIN_NAME = 'أحمد جمال';
@@ -1483,10 +1512,18 @@
                 alert(`عفواً، منتج "${name}" نفذت كميته حالياً وغير متوفر في المتجر.`);
                 return;
             }
+            const liveProd = (typeof ALL_STORE_PRODUCTS !== 'undefined') ? ALL_STORE_PRODUCTS.find(p => p.name === name) : null;
+            const activePrice = (liveProd && liveProd.price) ? liveProd.price : price;
+
             const existing = cart.find(i => i.name === name && !i.isService);
-            if (existing) { existing.qty = (existing.qty || 1) + 1; }
-            else { cart.push({ name, price, qty: 1, isService: false }); }
-            saveCart(); updateCart();
+            if (existing) {
+                existing.qty = (existing.qty || 1) + 1;
+                existing.price = activePrice;
+            } else {
+                cart.push({ name, price: activePrice, qty: 1, isService: false });
+            }
+            saveCart();
+            updateCart();
         }
 
         function changeQty(index, delta) {
@@ -1701,52 +1738,66 @@
             return slotMin <= curMinutes;
         }
 
+        let firebaseBookedSlots = [];
+        let firebaseAppointmentsMap = {};
+
+        function getFirebaseSlotKey(dateStr, timeStr) {
+            return `${dateStr}_${String(timeStr).replace(/[:\s]/g, '_')}`;
+        }
+
         function getBookedSlots() {
+            if (Array.isArray(firebaseBookedSlots) && firebaseBookedSlots.length > 0) {
+                return firebaseBookedSlots;
+            }
             try {
                 const raw = JSON.parse(localStorage.getItem('petHouseBookedSlots')) || [];
                 const todayStr = getLocalDateString(0);
-                let changed = false;
-                // تنظيف وإلغاء أي حجز مر عليه منتصف الليل (أصبح تاريخه أقدم من تاريخ اليوم)
-                const valid = raw.filter(k => {
-                    if (!k || typeof k !== 'string') { changed = true; return false; }
+                return raw.filter(k => {
+                    if (!k || typeof k !== 'string') return false;
                     const parts = k.split('_');
-                    if (parts.length < 2) { changed = true; return false; }
-                    const slotDate = parts[0];
-                    if (/^\d{4}-\d{2}-\d{2}$/.test(slotDate)) {
-                        if (slotDate < todayStr) {
-                            changed = true;
-                            return false; // انتهى موعد اليوم وتعدت الساعة 12 منتصف الليل -> يُحذف الحجز
-                        }
-                        return true;
-                    }
-                    changed = true;
-                    return false;
+                    return parts[0] >= todayStr;
                 });
-                if (changed) {
-                    localStorage.setItem('petHouseBookedSlots', JSON.stringify(valid));
-                }
-                return valid;
             } catch(e) {
                 return [];
             }
         }
 
-        function saveBookedSlot(d, t) {
+        function saveBookedSlot(d, t, extra = {}) {
             const dateStr = normalizeBookingDate(d);
             const k = `${dateStr}_${t}`;
-            const s = getBookedSlots();
-            if (!s.includes(k)) {
-                s.push(k);
-                localStorage.setItem('petHouseBookedSlots', JSON.stringify(s));
+            const safeKey = getFirebaseSlotKey(dateStr, t);
+            const user = getCurrentUser();
+
+            if (db) {
+                db.ref('appointments/' + safeKey).set({
+                    id: safeKey,
+                    key: k,
+                    date: dateStr,
+                    time: t,
+                    service: extra.name || (currentBooking && currentBooking.name) || 'حجز جرومينج',
+                    customerName: user ? user.name : '',
+                    customerPhone: user ? user.phone : '',
+                    createdAt: new Date().toISOString()
+                }).catch(err => console.warn('Firebase appointment save error:', err));
             }
+
+            if (!firebaseBookedSlots.includes(k)) {
+                firebaseBookedSlots.push(k);
+            }
+            localStorage.setItem('petHouseBookedSlots', JSON.stringify(firebaseBookedSlots));
         }
 
         function releaseBookedSlot(d, t) {
             const dateStr = normalizeBookingDate(d);
             const k = `${dateStr}_${t}`;
-            let s = getBookedSlots();
-            s = s.filter(x => x !== k && x !== `${d}_${t}`);
-            localStorage.setItem('petHouseBookedSlots', JSON.stringify(s));
+            const safeKey = getFirebaseSlotKey(dateStr, t);
+
+            if (db) {
+                db.ref('appointments/' + safeKey).remove().catch(err => console.warn('Firebase appointment remove error:', err));
+            }
+
+            firebaseBookedSlots = firebaseBookedSlots.filter(x => x !== k && x !== `${d}_${t}`);
+            localStorage.setItem('petHouseBookedSlots', JSON.stringify(firebaseBookedSlots));
         }
 
         function isSlotBooked(d, t) {
@@ -1861,7 +1912,8 @@
                 renderTimeSlots();
                 return;
             }
-            saveBookedSlot(dateStr, currentBooking.time);
+            saveBookedSlot(dateStr, currentBooking.time, { name: currentBooking.name });
+            renderTimeSlots();
             const displayDate = `${currentBooking.date} (${dateStr})`;
             cart.push({
                 name: currentBooking.name,
@@ -1999,30 +2051,31 @@
         // ==========================================
         // === لوحة تحكم وإدارة المتجر (أحمد جمال) ===
         // ==========================================
-        const ALL_STORE_PRODUCTS = [
-            { name: 'Chat & Chat Sterilized', category: 'أكياس دراي فود', price: 260 },
-            { name: 'Chat & Chat لحمة', category: 'أكياس دراي فود', price: 240 },
-            { name: 'Chat & Chat فراخ', category: 'أكياس دراي فود', price: 240 },
-            { name: 'Chat & Chat تونة', category: 'أكياس دراي فود', price: 240 },
-            { name: 'Bewi Cat Sterilized', category: 'أكياس دراي فود', price: 450 },
-            { name: 'Club 4 Paws Kitten 2kg', category: 'أكياس دراي فود', price: 950 },
-            { name: 'Soft Friskies', category: 'أكل رطب (ويت فود)', price: 35 },
-            { name: 'Soft Tommy', category: 'أكل رطب (ويت فود)', price: 35 },
-            { name: 'Soft Pro Cat', category: 'أكل رطب (ويت فود)', price: 35 },
-            { name: 'رمل جولد 10 كيلو', category: 'رمل قطط', price: 160 },
-            { name: 'رمل جولد 5 كيلو', category: 'رمل قطط', price: 85 },
-            { name: 'رمل بنتي ساند 10 كيلو', category: 'رمل قطط', price: 150 },
-            { name: 'رمل بنتي ساند 5 كيلو', category: 'رمل قطط', price: 80 },
-            { name: 'تريتس مكافآت للحيوانات الأليفة', category: 'مكافآت وتريتس', price: 35 }
+        // ==========================================
+        // === لوحة تحكم وإدارة المتجر (أحمد جمال) ===
+        // ==========================================
+        const INITIAL_STORE_PRODUCTS = [
+            { id: 'chat_sterilized', name: 'Chat & Chat Sterilized', category: 'أكياس دراي فود', price: 260, outOfStock: false },
+            { id: 'chat_beef', name: 'Chat & Chat لحمة', category: 'أكياس دراي فود', price: 240, outOfStock: false },
+            { id: 'chat_chicken', name: 'Chat & Chat فراخ', category: 'أكياس دراي فود', price: 240, outOfStock: false },
+            { id: 'chat_tuna', name: 'Chat & Chat تونة', category: 'أكياس دراي فود', price: 240, outOfStock: false },
+            { id: 'bewi_sterilized', name: 'Bewi Cat Sterilized', category: 'أكياس دراي فود', price: 450, outOfStock: false },
+            { id: 'club_4_paws', name: 'Club 4 Paws Kitten 2kg', category: 'أكياس دراي فود', price: 950, outOfStock: false },
+            { id: 'soft_friskies', name: 'Soft Friskies', category: 'أكل رطب (ويت فود)', price: 50, outOfStock: false },
+            { id: 'soft_tommy', name: 'Soft Tommy', category: 'أكل رطب (ويت فود)', price: 70, outOfStock: false },
+            { id: 'soft_pro_cat', name: 'Soft Pro Cat', category: 'أكل رطب (ويت فود)', price: 50, outOfStock: false },
+            { id: 'sand_gold_10kg', name: 'رمل جولد 10 كيلو', category: 'رمل قطط', price: 200, outOfStock: false },
+            { id: 'sand_gold_5kg', name: 'رمل جولد 5 كيلو', category: 'رمل قطط', price: 100, outOfStock: false },
+            { id: 'sand_benti_10kg', name: 'رمل بنتي ساند 10 كيلو', category: 'رمل قطط', price: 270, outOfStock: false },
+            { id: 'sand_benti_5kg', name: 'رمل بنتي ساند 5 كيلو', category: 'رمل قطط', price: 140, outOfStock: false },
+            { id: 'treats_reward', name: 'تريتس مكافآت للحيوانات الأليفة', category: 'مكافآت وتريتس', price: 35, outOfStock: false }
         ];
 
-        function getOutOfStockItems() {
-            try { return JSON.parse(localStorage.getItem('petHouseOutOfStock')) || []; }
-            catch(e) { return []; }
-        }
+        let ALL_STORE_PRODUCTS = JSON.parse(JSON.stringify(INITIAL_STORE_PRODUCTS));
 
         function isOutOfStock(name) {
-            return getOutOfStockItems().includes(name);
+            const p = ALL_STORE_PRODUCTS.find(x => x.name === name);
+            return p ? !!p.outOfStock : false;
         }
 
         function adminToggleStock(pName) {
@@ -2030,32 +2083,61 @@
                 alert('صلاحية المدير فقط (أ/ أحمد جمال)');
                 return;
             }
-            let list = getOutOfStockItems();
-            if (list.includes(pName)) {
-                list = list.filter(x => x !== pName);
+            const p = ALL_STORE_PRODUCTS.find(x => x.name === pName);
+            if (!p) return;
+            const newStatus = !p.outOfStock;
+            if (db) {
+                db.ref('products/' + p.id).update({ outOfStock: newStatus }).catch(err => {
+                    console.warn("Stock update error:", err);
+                });
             } else {
-                list.push(pName);
+                p.outOfStock = newStatus;
+                updateProductsStockUI();
+                renderAdminProductsList();
+                renderCartModal();
             }
-            localStorage.setItem('petHouseOutOfStock', JSON.stringify(list));
-            updateProductsStockUI();
-            renderAdminProductsList();
-            renderCartModal();
         }
 
         function adminResetAllStock() {
             if (!isAdmin()) return;
             if (confirm('هل تريد إعادة تعيين جميع المنتجات لتكون "متوفرة" بالكامل؟')) {
-                localStorage.setItem('petHouseOutOfStock', JSON.stringify([]));
+                if (db) {
+                    const updates = {};
+                    ALL_STORE_PRODUCTS.forEach(p => { updates[p.id + '/outOfStock'] = false; });
+                    db.ref('products').update(updates);
+                } else {
+                    ALL_STORE_PRODUCTS.forEach(p => { p.outOfStock = false; });
+                    updateProductsStockUI();
+                    renderAdminProductsList();
+                    renderCartModal();
+                }
+                alert('تم تعيين جميع المنتجات كـ متوفرة بنجاح ✅');
+            }
+        }
+
+        function adminEditPrice(pId) {
+            if (!isAdmin()) return;
+            const p = ALL_STORE_PRODUCTS.find(x => x.id === pId);
+            if (!p) return;
+            const val = prompt(`تعديل سعر منتج "${p.name}" (الجنيه):`, p.price);
+            if (val === null) return;
+            const newPrice = parseFloat(val);
+            if (isNaN(newPrice) || newPrice <= 0) {
+                alert('❌ يرجى إدخال سعر صحيح أكبر من الصفر');
+                return;
+            }
+            if (db) {
+                db.ref('products/' + p.id).update({ price: newPrice }).catch(err => console.warn(err));
+            } else {
+                p.price = newPrice;
                 updateProductsStockUI();
                 renderAdminProductsList();
                 renderCartModal();
-                alert('تم تعيين جميع المنتجات كـ متوفرة بنجاح ✅');
             }
         }
 
         function updateProductsStockUI() {
             const admin = isAdmin();
-            const outList = getOutOfStockItems();
 
             document.querySelectorAll('.product-card').forEach(card => {
                 const btn = card.querySelector('.btn-action');
@@ -2065,7 +2147,20 @@
                 if (!match) return;
                 const pName = match[1];
 
-                const out = outList.includes(pName);
+                const product = ALL_STORE_PRODUCTS.find(x => x.name === pName || x.id === pName);
+                if (!product) return;
+
+                // تحديث السعر الظاهر على الكارت
+                const priceDiv = card.querySelector('.product-price');
+                if (priceDiv && product.price) {
+                    priceDiv.innerText = `${product.price} جنيه`;
+                }
+                // تحديث زر الإضافة بالسعر الحالي
+                if (product.price) {
+                    btn.setAttribute('onclick', `addItem('${product.name}', ${product.price})`);
+                }
+
+                const out = !!product.outOfStock;
                 let badge = card.querySelector('.out-of-stock-badge');
                 let adminCtrl = card.querySelector('.admin-card-control');
 
@@ -2101,20 +2196,43 @@
                     }
                     adminCtrl.style.display = 'block';
                     if (out) {
-                        adminCtrl.innerHTML = `<button type="button" class="btn-admin-stock stock-out" onclick="event.stopPropagation(); adminToggleStock('${pName}')" title="اضغط لجعله متوفراً"><i class="fa-solid fa-toggle-off"></i> نفذت (اضغط للإتاحة ✅)</button>`;
+                        adminCtrl.innerHTML = `<button type="button" class="btn-admin-stock stock-out" onclick="event.stopPropagation(); adminToggleStock('${product.name}')" title="اضغط لجعله متوفراً"><i class="fa-solid fa-toggle-off"></i> نفذت (اضغط للإتاحة ✅)</button>`;
                     } else {
-                        adminCtrl.innerHTML = `<button type="button" class="btn-admin-stock stock-in" onclick="event.stopPropagation(); adminToggleStock('${pName}')" title="اضغط لجعله غير متوفر"><i class="fa-solid fa-toggle-on"></i> متوفر (اضغط للتعطيل ❌)</button>`;
+                        adminCtrl.innerHTML = `<button type="button" class="btn-admin-stock stock-in" onclick="event.stopPropagation(); adminToggleStock('${product.name}')" title="اضغط لجعله غير متوفر"><i class="fa-solid fa-toggle-on"></i> متوفر (اضغط للتعطيل ❌)</button>`;
                     }
                 } else {
                     if (adminCtrl) adminCtrl.style.display = 'none';
                 }
             });
 
+            // تحديث سعر التريتس إذا تغير
+            const treatProd = ALL_STORE_PRODUCTS.find(p => p.name === TREATS_NAME);
+            if (treatProd) {
+                TREATS_PRICE = treatProd.price || 35;
+            }
+
             // تحديث الأزرار العلوية والعائمة للمدير
             const floatingBtn = document.getElementById('adminFloatingBtn');
             if (floatingBtn) floatingBtn.style.display = admin ? 'flex' : 'none';
             const headerAdminBtn = document.getElementById('adminHeaderBtn');
             if (headerAdminBtn) headerAdminBtn.style.display = admin ? 'flex' : 'none';
+
+            updateAdminBadges();
+        }
+
+        function updateAdminBadges() {
+            const ob = document.getElementById('adminOrdersBadge');
+            if (ob) {
+                const count = (typeof firebaseOrdersList !== 'undefined') ? firebaseOrdersList.length : 0;
+                ob.innerText = count;
+                ob.style.display = count > 0 ? 'inline-block' : 'none';
+            }
+            const bb = document.getElementById('adminBookingsBadge');
+            if (bb) {
+                const bCount = getBookedSlots().length;
+                bb.innerText = bCount;
+                bb.style.display = bCount > 0 ? 'inline-block' : 'none';
+            }
         }
 
         function openAdminModal() {
@@ -2126,6 +2244,7 @@
             renderAdminProductsList();
             renderAdminBookingsList();
             renderAdminOrdersList();
+            updateAdminBadges();
             document.getElementById('adminModal').classList.add('active');
         }
 
@@ -2146,17 +2265,19 @@
         function renderAdminProductsList() {
             const list = document.getElementById('adminProductsList');
             if (!list) return;
-            const outList = getOutOfStockItems();
             let html = '';
             ALL_STORE_PRODUCTS.forEach(p => {
-                const isOut = outList.includes(p.name);
+                const isOut = !!p.outOfStock;
                 html += `
                     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--slot-bg);border:1px solid var(--border-color);border-radius:10px;gap:10px;">
                         <div style="display:flex;align-items:center;gap:10px;flex:1;">
                             <div style="font-size:20px;">${p.category.includes('رمل') ? '🏖️' : p.category.includes('دراي') ? '🐱' : p.category.includes('رطب') ? '🥫' : '🍖'}</div>
                             <div>
                                 <div style="font-weight:bold;font-size:13.5px;color:var(--text-color);">${p.name}</div>
-                                <div style="font-size:11.5px;color:var(--gray-color);">${p.category} • ${p.price} ج.م</div>
+                                <div style="font-size:11.5px;color:var(--gray-color);display:flex;align-items:center;gap:6px;margin-top:2px;">
+                                    <span>${p.category}</span> • 
+                                    <button type="button" onclick="adminEditPrice('${p.id}')" style="background:rgba(39,174,96,0.1);border:1px dashed var(--accent-color);color:var(--accent-color);padding:2px 7px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:11px;" title="اضغط لتعديل السعر"><i class="fa-solid fa-pen-to-square"></i> ${p.price} ج.م</button>
+                                </div>
                             </div>
                         </div>
                         <div>
@@ -2190,13 +2311,23 @@
                 if (slotDate === todayStr) dayLabel = 'اليوم (' + slotDate + ')';
                 else if (slotDate === tomStr) dayLabel = 'غداً (' + slotDate + ')';
 
+                const safeKey = getFirebaseSlotKey(slotDate, slotTime);
+                const info = (firebaseAppointmentsMap && firebaseAppointmentsMap[safeKey]) || {};
+                const cName = info.customerName || '';
+                const cPhone = info.customerPhone || '';
+                const sName = info.service || 'خدمة جرومينج';
+
                 html += `
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--slot-bg);border:1px solid var(--border-color);border-radius:10px;gap:8px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--slot-bg);border:1px solid var(--border-color);border-radius:10px;gap:8px;flex-wrap:wrap;">
                         <div>
-                            <div style="font-weight:bold;font-size:14px;color:var(--text-color);"><i class="fa-regular fa-clock" style="color:var(--accent-color);"></i> ${slotTime}</div>
+                            <div style="font-weight:bold;font-size:14px;color:var(--text-color);"><i class="fa-regular fa-clock" style="color:var(--accent-color);"></i> ${slotTime} <span style="font-size:12px;font-weight:normal;color:var(--accent-color);margin-right:6px;">(${sName})</span></div>
                             <div style="font-size:12px;color:var(--gray-color);"><i class="fa-regular fa-calendar"></i> ${dayLabel}</div>
+                            ${cName ? `<div style="font-size:11.5px;color:var(--text-color);margin-top:2px;">👤 العميل: ${cName} ${cPhone ? '(' + cPhone + ')' : ''}</div>` : ''}
                         </div>
-                        <button type="button" onclick="adminCancelBookingSlot('${slotDate}', '${slotTime}')" style="background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid #e74c3c;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-unlock"></i> إلغاء الحجز وإتاحته</button>
+                        <div style="display:flex;gap:6px;align-items:center;">
+                            ${cPhone ? `<a href="https://wa.me/20${String(cPhone).replace(/[^\\d]/g, '')}" target="_blank" style="padding:6px 10px;background:#25d366;color:#fff;border-radius:8px;font-size:11.5px;text-decoration:none;font-weight:bold;display:inline-flex;align-items:center;gap:4px;"><i class="fa-brands fa-whatsapp"></i> واتساب</a>` : ''}
+                            <button type="button" onclick="adminCancelBookingSlot('${slotDate}', '${slotTime}')" style="background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid #e74c3c;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;white-space:nowrap;"><i class="fa-solid fa-unlock"></i> إلغاء الحجز وإتاحته</button>
+                        </div>
                     </div>
                 `;
             });
@@ -2210,45 +2341,117 @@
                 alert(`تم إلغاء الحجز بنجاح وأصبح موعد "${slotTime}" متاحاً الآن للعملاء ✅`);
                 renderAdminBookingsList();
                 renderTimeSlots();
+                updateAdminBadges();
             }
         }
 
         function adminClearAllBookings() {
             if (!isAdmin()) return;
             if (confirm('تحذير: هل أنت متأكد من تفريغ وإلغاء جميع حجوزات الجرومينج بالكامل؟')) {
+                if (db) {
+                    db.ref('appointments').remove().catch(err => console.warn(err));
+                }
+                firebaseBookedSlots = [];
+                firebaseAppointmentsMap = {};
                 localStorage.setItem('petHouseBookedSlots', JSON.stringify([]));
                 alert('تم تفريغ وإتاحة جميع مواعيد الجرومينج بنجاح ✅');
                 renderAdminBookingsList();
                 renderTimeSlots();
+                updateAdminBadges();
             }
         }
+
+        // متغير قائمة الطلبات المحدثة لحظياً من Firebase
+        let firebaseOrdersList = [];
 
         function renderAdminOrdersList() {
             const list = document.getElementById('adminOrdersList');
             if (!list) return;
             try {
-                const orders = JSON.parse(localStorage.getItem('petHouseOrdersHistory')) || [];
+                const orders = (firebaseOrdersList && firebaseOrdersList.length > 0)
+                    ? firebaseOrdersList
+                    : (JSON.parse(localStorage.getItem('petHouseOrdersHistory')) || JSON.parse(localStorage.getItem('petHouseOrdersList')) || []);
+
                 if (orders.length === 0) {
-                    list.innerHTML = `<div style="text-align:center;padding:25px;color:var(--gray-color);font-size:13.5px;">لا توجد طلبات مسجلة بعد في هذا المتصفح.</div>`;
+                    list.innerHTML = `<div style="text-align:center;padding:25px;color:var(--gray-color);font-size:13.5px;"><i class="fa-solid fa-receipt" style="font-size:28px;margin-bottom:8px;color:var(--accent-color);display:block;"></i>لا توجد طلبات مسجلة بعد في قاعدة البيانات.</div>`;
                     return;
                 }
                 let html = '';
-                orders.slice().reverse().forEach(o => {
+                orders.forEach(o => {
+                    const statusColor = (o.status === 'تم التسليم' || o.status === 'مكتمل') ? '#27ae60' : (o.status === 'قيد التوصيل') ? '#3498db' : (o.status === 'ملغي') ? '#e74c3c' : '#f39c12';
+                    const dateFormatted = o.date ? new Date(o.date).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' }) : 'الآن';
+                    const phoneClean = o.user?.phone ? String(o.user.phone).replace(/[^\\d]/g, '') : '';
+                    const fKey = o.firebaseKey || o.firebaseId || '';
+
                     html += `
-                        <div style="padding:12px;background:var(--slot-bg);border:1px solid var(--border-color);border-radius:10px;font-size:13px;">
-                            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-weight:bold;">
-                                <span style="color:var(--accent-color);">#${o.id}</span>
-                                <span style="color:#27ae60;">${o.grandTotal} ج.م</span>
+                        <div style="padding:14px;background:var(--slot-bg);border:1px solid var(--border-color);border-radius:12px;font-size:13px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,0.03);">
+                            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-color);padding-bottom:8px;">
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <span style="font-weight:900;color:var(--accent-color);font-size:14px;">#${o.id || 'طلب'}</span>
+                                    <span style="font-size:11px;color:var(--gray-color);">${dateFormatted}</span>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <span style="font-size:11px;padding:3px 8px;border-radius:6px;font-weight:bold;background:${statusColor}22;color:${statusColor};border:1px solid ${statusColor}55;">${o.status || 'جديد'}</span>
+                                    <span style="font-weight:900;color:#27ae60;font-size:14px;">${o.grandTotal || 0} ج.م</span>
+                                </div>
                             </div>
-                            <div style="color:var(--text-color);margin-bottom:4px;">👤 العميل: ${o.user?.name || 'غير محدد'} (${o.user?.phone || '-'})</div>
-                            <div style="color:var(--gray-color);font-size:11.5px;">📍 العنوان: ${o.user?.address || '-'} (${o.shippingArea || ''})</div>
-                            <div style="color:var(--gray-color);font-size:11.5px;margin-top:4px;">📦 الأصناف: ${o.items?.map(i => i.name + ' (' + (i.qty || 1) + ')').join(', ')}</div>
+                            
+                            <div style="display:flex;flex-direction:column;gap:3px;color:var(--text-color);">
+                                <div style="display:flex;justify-content:space-between;align-items:center;">
+                                    <span style="font-weight:bold;">👤 العميل: ${o.user?.name || 'غير محدد'}</span>
+                                    ${phoneClean ? `<a href="https://wa.me/20${phoneClean}" target="_blank" style="padding:3px 8px;background:#25d366;color:#fff;border-radius:6px;font-size:11.5px;text-decoration:none;font-weight:bold;display:inline-flex;align-items:center;gap:4px;"><i class="fa-brands fa-whatsapp"></i> واتساب</a>` : ''}
+                                </div>
+                                <div style="font-size:12px;color:var(--gray-color);">📞 الهاتف: ${o.user?.phone || '-'}</div>
+                                <div style="font-size:12px;color:var(--gray-color);">📍 العنوان: ${o.user?.address || '-'} ${o.shippingArea ? '(' + o.shippingArea + ')' : ''}</div>
+                                ${o.user?.petName ? `<div style="font-size:11.5px;color:var(--accent-color);">🐾 الحيوان: ${o.user.petName} ${o.user.petType ? '(' + o.user.petType + ')' : ''} ${o.user.petAge ? '- عمره ' + o.user.petAge : ''}</div>` : ''}
+                            </div>
+
+                            <div style="background:var(--card-bg);border:1px dashed var(--border-color);border-radius:8px;padding:8px;margin-top:2px;">
+                                <div style="font-size:11.5px;font-weight:bold;color:var(--gray-color);margin-bottom:4px;">📦 الأصناف المطلوبة:</div>
+                                <div style="display:flex;flex-direction:column;gap:3px;font-size:12px;">
+                                    ${(o.items || []).map(i => {
+                                        if (i.isService && i.time) {
+                                            return `<div style="color:var(--text-color);">• ✂️ ${i.name} - موعد: ${i.date || ''} (${i.time}) - ${i.price} ج.م</div>`;
+                                        }
+                                        return `<div style="color:var(--text-color);">• 🛍️ ${i.name} × ${i.qty || 1} (${(i.price || 0) * (i.qty || 1)} ج.م)</div>`;
+                                    }).join('')}
+                                </div>
+                                <div style="display:flex;justify-content:space-between;border-top:1px dashed var(--border-color);margin-top:6px;padding-top:4px;font-size:11.5px;color:var(--gray-color);">
+                                    <span>المشتريات: ${o.subtotal || 0} ج.م | الشحن: ${o.shipping || 0} ج.م (${o.shippingArea || 'المحلة'})</span>
+                                </div>
+                            </div>
+
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;gap:6px;flex-wrap:wrap;">
+                                <div style="display:flex;gap:4px;align-items:center;">
+                                    <span style="font-size:11px;color:var(--gray-color);">تغيير الحالة:</span>
+                                    <button type="button" onclick="adminSetOrderStatus('${fKey}', 'قيد التوصيل')" style="padding:3px 7px;font-size:11px;border-radius:6px;border:1px solid #3498db;background:rgba(52,152,219,0.1);color:#3498db;cursor:pointer;">توصيل</button>
+                                    <button type="button" onclick="adminSetOrderStatus('${fKey}', 'تم التسليم')" style="padding:3px 7px;font-size:11px;border-radius:6px;border:1px solid #27ae60;background:rgba(39,174,96,0.1);color:#27ae60;cursor:pointer;">اكتمل</button>
+                                    <button type="button" onclick="adminSetOrderStatus('${fKey}', 'ملغي')" style="padding:3px 7px;font-size:11px;border-radius:6px;border:1px solid #e74c3c;background:rgba(231,76,60,0.1);color:#e74c3c;cursor:pointer;">إلغاء</button>
+                                </div>
+                                ${fKey ? `<button type="button" onclick="adminDeleteOrder('${fKey}')" style="background:none;border:none;color:#e74c3c;font-size:11.5px;cursor:pointer;" title="حذف الطلب"><i class="fa-regular fa-trash-can"></i> حذف</button>` : ''}
+                            </div>
                         </div>
                     `;
                 });
                 list.innerHTML = html;
             } catch(e) {
+                console.error(e);
                 list.innerHTML = `<div style="color:red;padding:15px;">خطأ في قراءة السجل</div>`;
+            }
+        }
+
+        function adminSetOrderStatus(key, status) {
+            if (!isAdmin()) return;
+            if (db && key) {
+                db.ref('orders/' + key).update({ status: status }).catch(err => console.warn(err));
+            }
+        }
+
+        function adminDeleteOrder(key) {
+            if (!isAdmin()) return;
+            if (!confirm('هل تريد حذف هذا الطلب نهائياً من سجل الطلبات؟')) return;
+            if (db && key) {
+                db.ref('orders/' + key).remove().catch(err => console.warn(err));
             }
         }
 
@@ -2638,7 +2841,7 @@
             // إرسال الإشعار في الخلفية
             sendBackgroundNotification(text, orderId, grand, user);
 
-            // حفظ الطلب في سجل الطلبات بالمتصفح
+            // حفظ الطلب في سجل وقاعدة بيانات Firebase Realtime Database
             const fullOrder = {
                 id: orderId,
                 date: new Date().toISOString(),
@@ -2648,8 +2851,21 @@
                 shipping: ship,
                 shippingArea: areaName,
                 grandTotal: grand,
-                status: 'تم الاستلام بنجاح'
+                status: 'جديد'
             };
+
+            if (db) {
+                try {
+                    const newOrderRef = db.ref('orders').push();
+                    fullOrder.firebaseKey = newOrderRef.key;
+                    newOrderRef.set(fullOrder).catch(err => {
+                        console.warn("Firebase order save notice:", err);
+                    });
+                } catch(e) {
+                    console.warn(e);
+                }
+            }
+
             saveOrderToHistory(fullOrder);
 
             // عرض نافذة تأكيد الطلب الفورية داخل الموقع
@@ -2732,8 +2948,108 @@
             }
         }
 
+        // ==============================================================
+        // === الاستماع اللحظي لقاعدة بيانات Firebase Realtime Database ===
+        // ==============================================================
+        function initFirebaseProducts() {
+            if (!db) return;
+            try {
+                const prodRef = db.ref('products');
+                prodRef.on('value', snapshot => {
+                    const data = snapshot.val();
+                    if (!data) {
+                        // عند أول تشغيل وتكون قاعدة البيانات فارغة: رفع البيانات المبدئية تلقائياً
+                        const seed = {};
+                        INITIAL_STORE_PRODUCTS.forEach(p => { seed[p.id] = p; });
+                        prodRef.set(seed).catch(e => console.warn('Products seed error:', e));
+                        ALL_STORE_PRODUCTS = JSON.parse(JSON.stringify(INITIAL_STORE_PRODUCTS));
+                    } else {
+                        const list = Object.keys(data).map(k => ({
+                            id: k,
+                            ...data[k]
+                        }));
+                        INITIAL_STORE_PRODUCTS.forEach(initP => {
+                            if (!list.some(p => p.id === initP.id || p.name === initP.name)) {
+                                list.push(initP);
+                            }
+                        });
+                        ALL_STORE_PRODUCTS = list;
+                    }
+                    updateProductsStockUI();
+                    renderAdminProductsList();
+                    renderCartModal();
+                });
+            } catch(e) {
+                console.warn('initFirebaseProducts error:', e);
+            }
+        }
+
+        function initFirebaseAppointments() {
+            if (!db) return;
+            try {
+                const apptRef = db.ref('appointments');
+                apptRef.on('value', snapshot => {
+                    const data = snapshot.val() || {};
+                    firebaseAppointmentsMap = data;
+                    const todayStr = getLocalDateString(0);
+                    const slots = [];
+                    const oldKeys = {};
+
+                    Object.keys(data).forEach(k => {
+                        const item = data[k];
+                        if (item && item.date && item.time) {
+                            if (item.date < todayStr) {
+                                // تنظيف تلقائي للمواعيد التي مرت بعد منتصف الليل
+                                oldKeys[k] = null;
+                            } else {
+                                slots.push(`${item.date}_${item.time}`);
+                            }
+                        }
+                    });
+
+                    if (Object.keys(oldKeys).length > 0) {
+                        apptRef.update(oldKeys).catch(() => {});
+                    }
+
+                    firebaseBookedSlots = slots;
+                    localStorage.setItem('petHouseBookedSlots', JSON.stringify(slots));
+                    renderTimeSlots();
+                    renderAdminBookingsList();
+                    updateAdminBadges();
+                });
+            } catch(e) {
+                console.warn('initFirebaseAppointments error:', e);
+            }
+        }
+
+        function initFirebaseOrders() {
+            if (!db) return;
+            try {
+                const ordersRef = db.ref('orders');
+                ordersRef.on('value', snapshot => {
+                    const data = snapshot.val() || {};
+                    firebaseOrdersList = Object.keys(data).map(k => ({
+                        firebaseKey: k,
+                        ...data[k]
+                    }));
+                    firebaseOrdersList.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+                    renderAdminOrdersList();
+                    updateAdminBadges();
+                });
+            } catch(e) {
+                console.warn('initFirebaseOrders error:', e);
+            }
+        }
+
+        function initFirebaseRealtime() {
+            initFirebaseProducts();
+            initFirebaseAppointments();
+            initFirebaseOrders();
+        }
+
         // === Init ===
         window.addEventListener('DOMContentLoaded', () => {
+            initFirebaseRealtime();
             renderUserInfo();
             loadCart();
             checkReorder();
