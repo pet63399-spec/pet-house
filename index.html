@@ -649,6 +649,26 @@
             background: #2563eb;
             border-color: #2563eb;
         }
+        .order-filter-chip {
+            padding: 4px 11px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: var(--slot-bg);
+            color: var(--text-color);
+            font-size: 11.5px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+        .order-filter-chip:hover {
+            border-color: var(--accent-color);
+        }
+        .order-filter-chip.active {
+            background: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+        }
 
     </style>
 </head>
@@ -1258,8 +1278,24 @@
                 <button class="btn-close-modal" onclick="closeAdminModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
+            <!-- شريط الإحصائيات السريعة -->
+            <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin:12px 0 6px 0;">
+                <div style="background:var(--slot-bg);border:1px solid var(--border-color);border-radius:10px;padding:8px 10px;text-align:center;">
+                    <div style="font-size:11px;color:var(--gray-color);"><i class="fa-solid fa-boxes-stacked"></i> المنتجات</div>
+                    <div id="adminStatProducts" style="font-size:15px;font-weight:900;color:var(--text-color);margin-top:2px;">0</div>
+                </div>
+                <div style="background:var(--slot-bg);border:1px solid var(--border-color);border-radius:10px;padding:8px 10px;text-align:center;">
+                    <div style="font-size:11px;color:var(--gray-color);"><i class="fa-solid fa-calendar-check"></i> الحجوزات</div>
+                    <div id="adminStatBookings" style="font-size:15px;font-weight:900;color:var(--accent-color);margin-top:2px;">0</div>
+                </div>
+                <div style="background:var(--slot-bg);border:1px solid var(--border-color);border-radius:10px;padding:8px 10px;text-align:center;">
+                    <div style="font-size:11px;color:var(--gray-color);"><i class="fa-solid fa-receipt"></i> الطلبات</div>
+                    <div id="adminStatOrders" style="font-size:15px;font-weight:900;color:#2563eb;margin-top:2px;">0</div>
+                </div>
+            </div>
+
             <!-- أزرار التبويبات -->
-            <div style="display:flex;gap:6px;margin:14px 0 12px 0;">
+            <div style="display:flex;gap:6px;margin:10px 0 12px 0;">
                 <button type="button" class="admin-tab-btn active" id="adminTabBtnProducts" onclick="switchAdminTab('products')"><i class="fa-solid fa-boxes-stacked"></i> البضاعة والكميات</button>
                 <button type="button" class="admin-tab-btn" id="adminTabBtnGrooming" onclick="switchAdminTab('grooming')"><i class="fa-solid fa-calendar-check"></i> حجوزات الجرومينج <span id="adminBookingsBadge" style="display:none;background:var(--accent-color);color:#fff;font-size:10.5px;padding:2px 7px;border-radius:10px;margin-right:4px;font-weight:bold;">0</span></button>
                 <button type="button" class="admin-tab-btn" id="adminTabBtnOrders" onclick="switchAdminTab('orders')"><i class="fa-solid fa-receipt"></i> سجل الطلبات <span id="adminOrdersBadge" style="display:none;background:#e74c3c;color:#fff;font-size:10.5px;padding:2px 7px;border-radius:10px;margin-right:4px;font-weight:bold;">0</span></button>
@@ -1267,10 +1303,47 @@
 
             <!-- تبويب 1: البضاعة -->
             <div id="adminTabContentProducts">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:8px 12px;background:var(--slot-bg);border:1px solid var(--border-color);border-radius:10px;">
-                    <span style="font-size:12.5px;font-weight:700;color:var(--text-color);"><i class="fa-solid fa-circle-info" style="color:var(--accent-color);"></i> اضغط على أي منتج لتبديل حالته فوراً</span>
-                    <button type="button" onclick="adminResetAllStock()" style="padding:5px 10px;font-size:11.5px;border-radius:6px;border:1px solid #27ae60;background:rgba(39,174,96,0.12);color:#27ae60;cursor:pointer;font-weight:bold;"><i class="fa-solid fa-check-double"></i> جعل الكل متوفر</button>
+                <!-- أزرار التحكم بالبضاعة -->
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px;flex-wrap:wrap;">
+                    <button type="button" onclick="toggleNewProductForm()" style="padding:6px 12px;font-size:12px;border-radius:8px;border:none;background:var(--accent-color);color:#fff;cursor:pointer;font-weight:bold;display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-circle-plus"></i> إضافة منتج جديد</button>
+                    <button type="button" onclick="adminResetAllStock()" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid #27ae60;background:rgba(39,174,96,0.12);color:#27ae60;cursor:pointer;font-weight:bold;display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-check-double"></i> جعل الكل متوفر</button>
                 </div>
+
+                <!-- نموذج إضافة منتج جديد (مخفي افتراضياً) -->
+                <div id="adminNewProductBox" style="display:none;background:var(--slot-bg);border:1.5px dashed var(--accent-color);border-radius:10px;padding:12px;margin-bottom:10px;">
+                    <div style="font-size:13px;font-weight:bold;color:var(--text-color);margin-bottom:8px;"><i class="fa-solid fa-box-open" style="color:var(--accent-color);"></i> بيانات المنتج الجديد:</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                        <div>
+                            <label style="font-size:11px;color:var(--gray-color);display:block;margin-bottom:3px;">اسم المنتج</label>
+                            <input type="text" id="newProdName" placeholder="مثال: رويال كانين 2 كجم" class="form-input" style="padding:7px 10px;font-size:12px;">
+                        </div>
+                        <div>
+                            <label style="font-size:11px;color:var(--gray-color);display:block;margin-bottom:3px;">القسم</label>
+                            <select id="newProdCat" class="form-input" style="padding:7px 10px;font-size:12px;">
+                                <option value="أكياس دراي فود">أكياس دراي فود</option>
+                                <option value="أكل رطب (ويت فود)">أكل رطب (ويت فود)</option>
+                                <option value="رمل قطط">رمل قطط</option>
+                                <option value="مكافآت وتريتس">مكافآت وتريتس</option>
+                                <option value="مستلزمات عامة">مستلزمات عامة</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:flex-end;">
+                        <div style="flex:1;">
+                            <label style="font-size:11px;color:var(--gray-color);display:block;margin-bottom:3px;">السعر (ج.م)</label>
+                            <input type="number" id="newProdPrice" placeholder="مثال: 180" class="form-input" style="padding:7px 10px;font-size:12px;">
+                        </div>
+                        <button type="button" onclick="adminAddNewProduct()" class="btn-primary" style="padding:8px 14px;font-size:12px;white-space:nowrap;"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ في Firebase</button>
+                        <button type="button" onclick="toggleNewProductForm(false)" style="padding:8px 12px;font-size:12px;background:none;border:1px solid var(--border-color);color:var(--gray-color);border-radius:8px;cursor:pointer;">إلغاء</button>
+                    </div>
+                </div>
+
+                <!-- شريط البحث السريع في المنتجات -->
+                <div style="position:relative;margin-bottom:8px;">
+                    <i class="fa-solid fa-magnifying-glass" style="position:absolute;right:10px;top:10px;color:var(--gray-color);font-size:12px;"></i>
+                    <input type="text" id="adminProdSearch" oninput="onAdminProductSearch(this.value)" placeholder="بحث سريع في المنتجات بالاسم أو القسم..." class="form-input" style="padding:7px 30px 7px 10px;font-size:12px;width:100%;">
+                </div>
+
                 <div id="adminProductsList" style="display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto;padding-left:2px;">
                     <!-- dynamic -->
                 </div>
@@ -1289,6 +1362,15 @@
 
             <!-- تبويب 3: سجل الطلبات -->
             <div id="adminTabContentOrders" style="display:none;">
+                <!-- أزرار فلترة الطلبات حسب الحالة -->
+                <div style="display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px;">
+                    <button type="button" class="order-filter-chip active" data-status="all" onclick="filterAdminOrders('all')">الكل</button>
+                    <button type="button" class="order-filter-chip" data-status="جديد" onclick="filterAdminOrders('جديد')">جديد</button>
+                    <button type="button" class="order-filter-chip" data-status="قيد التوصيل" onclick="filterAdminOrders('قيد التوصيل')">قيد التوصيل</button>
+                    <button type="button" class="order-filter-chip" data-status="تم التسليم" onclick="filterAdminOrders('تم التسليم')">تم التسليم</button>
+                    <button type="button" class="order-filter-chip" data-status="ملغي" onclick="filterAdminOrders('ملغي')">ملغي</button>
+                </div>
+
                 <div id="adminOrdersList" style="display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto;padding-left:2px;">
                     <!-- dynamic -->
                 </div>
@@ -2226,6 +2308,106 @@
             updateAdminBadges();
         }
 
+        let adminProductSearchQuery = '';
+        function onAdminProductSearch(query) {
+            adminProductSearchQuery = (query || '').toLowerCase().trim();
+            renderAdminProductsList();
+        }
+
+        function toggleNewProductForm(show) {
+            const box = document.getElementById('adminNewProductBox');
+            if (!box) return;
+            if (typeof show === 'boolean') {
+                box.style.display = show ? 'block' : 'none';
+            } else {
+                box.style.display = (box.style.display === 'none' || !box.style.display) ? 'block' : 'none';
+            }
+            if (box.style.display === 'block') {
+                const inp = document.getElementById('newProdName');
+                if (inp) inp.focus();
+            }
+        }
+
+        function adminAddNewProduct() {
+            if (!isAdmin()) {
+                alert('صلاحية المدير فقط (أ/ أحمد جمال)');
+                return;
+            }
+            const nameInp = document.getElementById('newProdName');
+            const catInp = document.getElementById('newProdCat');
+            const priceInp = document.getElementById('newProdPrice');
+
+            const name = nameInp ? nameInp.value.trim() : '';
+            const cat = catInp ? catInp.value : 'أكياس دراي فود';
+            const price = priceInp ? parseFloat(priceInp.value) : 0;
+
+            if (!name) {
+                alert('يرجى كتابة اسم المنتج');
+                return;
+            }
+            if (isNaN(price) || price <= 0) {
+                alert('يرجى إدخال سعر صحيح أكبر من الصفر');
+                return;
+            }
+
+            const id = 'prod_' + Date.now();
+            const newProd = {
+                id: id,
+                name: name,
+                category: cat,
+                price: price,
+                outOfStock: false
+            };
+
+            if (db) {
+                db.ref('products/' + id).set(newProd).then(() => {
+                    alert(`✅ تم إضافة منتج "${name}" بنجاح في المتجر و Firebase!`);
+                    if (nameInp) nameInp.value = '';
+                    if (priceInp) priceInp.value = '';
+                    toggleNewProductForm(false);
+                }).catch(err => {
+                    alert('حدث خطأ أثناء حفظ المنتج في Firebase');
+                    console.error(err);
+                });
+            } else {
+                ALL_STORE_PRODUCTS.push(newProd);
+                updateProductsStockUI();
+                renderAdminProductsList();
+                toggleNewProductForm(false);
+                alert(`✅ تم إضافة منتج "${name}" بنجاح!`);
+            }
+        }
+
+        function adminDeleteProduct(id, name) {
+            if (!isAdmin()) return;
+            if (!confirm(`هل أنت متأكد من حذف منتج "${name}" نهائياً من المتجر وقاعدة البيانات؟`)) return;
+            if (db && id) {
+                db.ref('products/' + id).remove().then(() => {
+                    alert(`تم حذف منتج "${name}" بنجاح ✅`);
+                }).catch(err => console.error(err));
+            } else {
+                ALL_STORE_PRODUCTS = ALL_STORE_PRODUCTS.filter(p => p.id !== id);
+                updateProductsStockUI();
+                renderAdminProductsList();
+                updateAdminBadges();
+            }
+        }
+
+        function adminEditProductName(id) {
+            if (!isAdmin()) return;
+            const p = ALL_STORE_PRODUCTS.find(x => x.id === id);
+            if (!p) return;
+            const newName = prompt(`تعديل اسم المنتج:`, p.name);
+            if (newName === null || !newName.trim()) return;
+            if (db) {
+                db.ref('products/' + id).update({ name: newName.trim() }).catch(err => console.warn(err));
+            } else {
+                p.name = newName.trim();
+                updateProductsStockUI();
+                renderAdminProductsList();
+            }
+        }
+
         function updateAdminBadges() {
             const ob = document.getElementById('adminOrdersBadge');
             if (ob) {
@@ -2238,6 +2420,23 @@
                 const bCount = getBookedSlots().length;
                 bb.innerText = bCount;
                 bb.style.display = bCount > 0 ? 'inline-block' : 'none';
+            }
+
+            // تحديث شريط الإحصائيات بأعلى لوحة الإدارة
+            const statP = document.getElementById('adminStatProducts');
+            if (statP && typeof ALL_STORE_PRODUCTS !== 'undefined') {
+                const total = ALL_STORE_PRODUCTS.length;
+                const outCount = ALL_STORE_PRODUCTS.filter(p => p.outOfStock).length;
+                statP.innerHTML = `${total} <small style="font-size:10.5px;font-weight:normal;color:${outCount > 0 ? '#e74c3c' : '#27ae60'};">(${outCount} نافذ)</small>`;
+            }
+            const statB = document.getElementById('adminStatBookings');
+            if (statB) {
+                statB.innerText = getBookedSlots().length;
+            }
+            const statO = document.getElementById('adminStatOrders');
+            if (statO && typeof firebaseOrdersList !== 'undefined') {
+                const totalRev = firebaseOrdersList.reduce((acc, o) => acc + (Number(o.grandTotal) || 0), 0);
+                statO.innerHTML = `${firebaseOrdersList.length} <small style="font-size:10.5px;font-weight:normal;color:#27ae60;">(${totalRev} ج.م)</small>`;
             }
         }
 
@@ -2271,25 +2470,45 @@
         function renderAdminProductsList() {
             const list = document.getElementById('adminProductsList');
             if (!list) return;
+
+            let filtered = ALL_STORE_PRODUCTS;
+            if (adminProductSearchQuery) {
+                filtered = ALL_STORE_PRODUCTS.filter(p =>
+                    (p.name && p.name.toLowerCase().includes(adminProductSearchQuery)) ||
+                    (p.category && p.category.toLowerCase().includes(adminProductSearchQuery))
+                );
+            }
+
+            if (filtered.length === 0) {
+                list.innerHTML = `<div style="text-align:center;padding:25px;color:var(--gray-color);font-size:13px;"><i class="fa-solid fa-box-open" style="font-size:24px;margin-bottom:6px;display:block;"></i>لا توجد أصناف مطابقة للبحث.</div>`;
+                return;
+            }
+
             let html = '';
-            ALL_STORE_PRODUCTS.forEach(p => {
+            filtered.forEach(p => {
                 const isOut = !!p.outOfStock;
+                const icon = p.category.includes('رمل') ? '🏖️' : p.category.includes('دراي') ? '🐱' : p.category.includes('رطب') ? '🥫' : p.category.includes('مكافآت') ? '🍖' : '📦';
+
                 html += `
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--slot-bg);border:1px solid var(--border-color);border-radius:10px;gap:10px;">
-                        <div style="display:flex;align-items:center;gap:10px;flex:1;">
-                            <div style="font-size:20px;">${p.category.includes('رمل') ? '🏖️' : p.category.includes('دراي') ? '🐱' : p.category.includes('رطب') ? '🥫' : '🍖'}</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--slot-bg);border:1px solid var(--border-color);border-radius:10px;gap:8px;flex-wrap:wrap;">
+                        <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:180px;">
+                            <div style="font-size:22px;">${icon}</div>
                             <div>
-                                <div style="font-weight:bold;font-size:13.5px;color:var(--text-color);">${p.name}</div>
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <div style="font-weight:bold;font-size:13.5px;color:var(--text-color);">${p.name}</div>
+                                    <button type="button" onclick="adminEditProductName('${p.id}')" style="background:none;border:none;color:var(--gray-color);cursor:pointer;font-size:11px;" title="تعديل اسم الصنف"><i class="fa-solid fa-pen"></i></button>
+                                </div>
                                 <div style="font-size:11.5px;color:var(--gray-color);display:flex;align-items:center;gap:6px;margin-top:2px;">
                                     <span>${p.category}</span> • 
                                     <button type="button" onclick="adminEditPrice('${p.id}')" style="background:rgba(39,174,96,0.1);border:1px dashed var(--accent-color);color:var(--accent-color);padding:2px 7px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:11px;" title="اضغط لتعديل السعر"><i class="fa-solid fa-pen-to-square"></i> ${p.price} ج.م</button>
                                 </div>
                             </div>
                         </div>
-                        <div>
-                            <button type="button" onclick="adminToggleStock('${p.name}')" style="padding:7px 12px;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;border:none;display:flex;align-items:center;gap:6px;${isOut ? 'background:#e74c3c;color:#fff;' : 'background:#27ae60;color:#fff;'}">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <button type="button" onclick="adminToggleStock('${p.name}')" style="padding:6px 11px;border-radius:8px;font-size:11.5px;font-weight:bold;cursor:pointer;border:none;display:flex;align-items:center;gap:5px;${isOut ? 'background:#e74c3c;color:#fff;' : 'background:#27ae60;color:#fff;'}">
                                 ${isOut ? '<i class="fa-solid fa-ban"></i> نفذت (اجعله متوفر)' : '<i class="fa-solid fa-check"></i> متوفر (اجعله نفذ)'}
                             </button>
+                            <button type="button" onclick="adminDeleteProduct('${p.id}', '${p.name}')" style="background:none;border:none;color:#e74c3c;cursor:pointer;padding:6px;font-size:13px;" title="حذف الصنف نهائياً"><i class="fa-regular fa-trash-can"></i></button>
                         </div>
                     </div>
                 `;
@@ -2369,17 +2588,30 @@
 
         // متغير قائمة الطلبات المحدثة لحظياً من Firebase
         let firebaseOrdersList = [];
+        let adminOrderStatusFilter = 'all';
+
+        function filterAdminOrders(status) {
+            adminOrderStatusFilter = status;
+            document.querySelectorAll('.order-filter-chip').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-status') === status);
+            });
+            renderAdminOrdersList();
+        }
 
         function renderAdminOrdersList() {
             const list = document.getElementById('adminOrdersList');
             if (!list) return;
             try {
-                const orders = (firebaseOrdersList && firebaseOrdersList.length > 0)
+                let orders = (firebaseOrdersList && firebaseOrdersList.length > 0)
                     ? firebaseOrdersList
                     : (JSON.parse(localStorage.getItem('petHouseOrdersHistory')) || JSON.parse(localStorage.getItem('petHouseOrdersList')) || []);
 
+                if (adminOrderStatusFilter !== 'all') {
+                    orders = orders.filter(o => o.status === adminOrderStatusFilter);
+                }
+
                 if (orders.length === 0) {
-                    list.innerHTML = `<div style="text-align:center;padding:25px;color:var(--gray-color);font-size:13.5px;"><i class="fa-solid fa-receipt" style="font-size:28px;margin-bottom:8px;color:var(--accent-color);display:block;"></i>لا توجد طلبات مسجلة بعد في قاعدة البيانات.</div>`;
+                    list.innerHTML = `<div style="text-align:center;padding:25px;color:var(--gray-color);font-size:13.5px;"><i class="fa-solid fa-receipt" style="font-size:28px;margin-bottom:8px;color:var(--accent-color);display:block;"></i>لا توجد طلبات في هذا القسم حالياً.</div>`;
                     return;
                 }
                 let html = '';
@@ -2388,6 +2620,8 @@
                     const dateFormatted = o.date ? new Date(o.date).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' }) : 'الآن';
                     const phoneClean = o.user?.phone ? String(o.user.phone).replace(/[^\\d]/g, '') : '';
                     const fKey = o.firebaseKey || o.firebaseId || '';
+                    const clientName = o.user?.name || 'عميل';
+                    const waCustomerMsg = encodeURIComponent(`مرحباً أستاذ ${clientName}، بخصوص طلبك من Pet House رقم (${o.id}):`);
 
                     html += `
                         <div style="padding:14px;background:var(--slot-bg);border:1px solid var(--border-color);border-radius:12px;font-size:13px;display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,0.03);">
@@ -2404,8 +2638,8 @@
                             
                             <div style="display:flex;flex-direction:column;gap:3px;color:var(--text-color);">
                                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                                    <span style="font-weight:bold;">👤 العميل: ${o.user?.name || 'غير محدد'}</span>
-                                    ${phoneClean ? `<a href="https://wa.me/20${phoneClean}" target="_blank" style="padding:3px 8px;background:#25d366;color:#fff;border-radius:6px;font-size:11.5px;text-decoration:none;font-weight:bold;display:inline-flex;align-items:center;gap:4px;"><i class="fa-brands fa-whatsapp"></i> واتساب</a>` : ''}
+                                    <span style="font-weight:bold;">👤 العميل: ${clientName}</span>
+                                    ${phoneClean ? `<a href="https://wa.me/20${phoneClean}?text=${waCustomerMsg}" target="_blank" style="padding:3px 8px;background:#25d366;color:#fff;border-radius:6px;font-size:11.5px;text-decoration:none;font-weight:bold;display:inline-flex;align-items:center;gap:4px;"><i class="fa-brands fa-whatsapp"></i> واتساب العميل</a>` : ''}
                                 </div>
                                 <div style="font-size:12px;color:var(--gray-color);">📞 الهاتف: ${o.user?.phone || '-'}</div>
                                 <div style="font-size:12px;color:var(--gray-color);">📍 العنوان: ${o.user?.address || '-'} ${o.shippingArea ? '(' + o.shippingArea + ')' : ''}</div>
@@ -2873,6 +3107,10 @@
             }
 
             saveOrderToHistory(fullOrder);
+
+            // فتح رابط واتساب (wa.me) لإرسال تفاصيل الطلب إلى رقم واتساب الشغل
+            const waUrl = `https://wa.me/201210556177?text=${encodeURIComponent(text)}`;
+            window.open(waUrl, '_blank');
 
             // عرض نافذة تأكيد الطلب الفورية داخل الموقع
             showOrderSuccessModal(fullOrder, text);
