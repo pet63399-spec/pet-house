@@ -669,6 +669,43 @@
             color: #fff;
             border-color: var(--accent-color);
         }
+        .admin-top-btn {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: #f1c40f;
+            border: 1.5px solid #f1c40f;
+            padding: 7px 14px;
+            border-radius: 20px;
+            font-size: 12.5px;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(241, 196, 15, 0.25);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .admin-top-btn:hover {
+            background: #f1c40f;
+            color: #111827;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(241, 196, 15, 0.45);
+        }
+        .admin-top-btn.is-admin-active {
+            background: linear-gradient(135deg, #f39c12, #f1c40f);
+            color: #111827;
+            border-color: #f39c12;
+            box-shadow: 0 3px 12px rgba(243, 156, 18, 0.4);
+        }
+        body.dark-mode .admin-top-btn {
+            background: #1e293b;
+            color: #f1c40f;
+            border-color: #f1c40f;
+        }
+        body.dark-mode .admin-top-btn:hover {
+            background: #f1c40f;
+            color: #111827;
+        }
 
     </style>
 </head>
@@ -679,8 +716,8 @@
     <header>
         <a href="#" class="logo"><img src="logo.png" alt="Pet House"></a>
         <div class="header-actions">
-            <button class="user-pill-btn admin-pill-btn" id="adminHeaderBtn" onclick="openAdminModal()">
-                <i class="fa-solid fa-crown"></i><span>لوحة الإدارة</span>
+            <button class="admin-top-btn" id="topAdminBtn" onclick="handleTopAdminClick()" title="لوحة تحكم المدير (خاصة بأحمد جمال)">
+                <i class="fa-solid fa-crown"></i><span id="topAdminBtnText">لوحة التحكم 👑</span>
             </button>
             <button class="user-pill-btn" id="userPillBtn" onclick="openProfileModal()">
                 <i class="fa-solid fa-user"></i><span id="headerUserName">حسابي</span>
@@ -1461,20 +1498,37 @@
             const b = document.getElementById('barUserName');
             const admin = isAdmin();
 
+            const topAdminBtn = document.getElementById('topAdminBtn');
+            const topAdminBtnText = document.getElementById('topAdminBtnText');
+
             if (user) {
                 if (admin) {
                     h.innerHTML = '<i class="fa-solid fa-crown" style="color:#f1c40f;"></i> أ/ أحمد جمال';
                     b.innerHTML = '<strong>أ/ أحمد جمال (مدير المتجر) 👑</strong> — وضع التحكم والإدارة مفعل';
+                    if (topAdminBtn) topAdminBtn.classList.add('is-admin-active');
+                    if (topAdminBtnText) topAdminBtnText.innerHTML = 'لوحة التحكم 👑';
                 } else {
                     h.innerText = user.name.split(' ')[0];
                     b.innerText = user.name;
+                    if (topAdminBtn) topAdminBtn.classList.remove('is-admin-active');
+                    if (topAdminBtnText) topAdminBtnText.innerHTML = 'لوحة الإدارة 👑';
                 }
                 bar.style.display = 'flex';
             } else {
                 h.innerText = 'دخول / تسجيل';
                 b.innerText = 'عميلنا العزيز';
+                if (topAdminBtn) topAdminBtn.classList.remove('is-admin-active');
+                if (topAdminBtnText) topAdminBtnText.innerHTML = 'لوحة الإدارة 👑';
             }
             updateProductsStockUI();
+        }
+
+        function handleTopAdminClick() {
+            if (isAdmin()) {
+                openAdminModal();
+            } else {
+                openAdminOtpModal();
+            }
         }
 
         // === Doctor Badge (3 PM - 11 PM) ===
@@ -3150,7 +3204,13 @@
             if (m) {
                 m.classList.add('active');
                 const inp = document.getElementById('adminOtpInput');
-                if (inp) { inp.value = ''; inp.focus(); }
+                if (inp) {
+                    inp.value = '';
+                    setTimeout(() => inp.focus(), 100);
+                    inp.onkeydown = function(e) {
+                        if (e.key === 'Enter') verifyAdminOtp();
+                    };
+                }
                 const err = document.getElementById('adminOtpError');
                 if (err) err.style.display = 'none';
             }
