@@ -2223,20 +2223,40 @@
         // === لوحة تحكم وإدارة المتجر (أحمد جمال) ===
         // ==========================================
         const INITIAL_STORE_PRODUCTS = [
-            { id: 'chat_sterilized', name: 'Chat & Chat Sterilized', category: 'أكياس دراي فود', price: 260, outOfStock: false },
-            { id: 'chat_beef', name: 'Chat & Chat لحمة', category: 'أكياس دراي فود', price: 240, outOfStock: false },
-            { id: 'chat_chicken', name: 'Chat & Chat فراخ', category: 'أكياس دراي فود', price: 240, outOfStock: false },
-            { id: 'chat_tuna', name: 'Chat & Chat تونة', category: 'أكياس دراي فود', price: 240, outOfStock: false },
-            { id: 'bewi_sterilized', name: 'Bewi Cat Sterilized', category: 'أكياس دراي فود', price: 450, outOfStock: false },
-            { id: 'club_4_paws', name: 'Club 4 Paws Kitten 2kg', category: 'أكياس دراي فود', price: 950, outOfStock: false },
-            { id: 'soft_friskies', name: 'Soft Friskies', category: 'أكل رطب (ويت فود)', price: 50, outOfStock: false },
-            { id: 'soft_tommy', name: 'Soft Tommy', category: 'أكل رطب (ويت فود)', price: 70, outOfStock: false },
-            { id: 'soft_pro_cat', name: 'Soft Pro Cat', category: 'أكل رطب (ويت فود)', price: 50, outOfStock: false },
-            { id: 'sand_gold_10kg', name: 'رمل جولد 10 كيلو', category: 'رمل قطط', price: 200, outOfStock: false },
-            { id: 'sand_gold_5kg', name: 'رمل جولد 5 كيلو', category: 'رمل قطط', price: 100, outOfStock: false },
-            { id: 'sand_benti_10kg', name: 'رمل بنتي ساند 10 كيلو', category: 'رمل قطط', price: 270, outOfStock: false },
-            { id: 'sand_benti_5kg', name: 'رمل بنتي ساند 5 كيلو', category: 'رمل قطط', price: 140, outOfStock: false },
-            { id: 'treats_reward', name: 'تريتس مكافآت للحيوانات الأليفة', category: 'مكافآت وتريتس', price: 35, outOfStock: false }
+            { id: 'chat_sterilized', name: 'Chat & Chat Sterilized', category: 'أكياس دراي فود', price: 260, outOfStock: false, image: 'images/chat-chat-sterilized.webp' },
+            { id: 'chat_beef', name: 'Chat & Chat لحمة', category: 'أكياس دراي فود', price: 240, outOfStock: false, image: 'images/chat-chat-beef.webp' },
+            { id: 'chat_chicken', name: 'Chat & Chat فراخ', category: 'أكياس دراي فود', price: 240, outOfStock: false, image: 'images/chat-chat-chicken.webp' },
+            { id: 'chat_tuna', name: 'Chat & Chat تونة', category: 'أكياس دراي فود', price: 240, outOfStock: false, image: 'images/chat-chat-tuna.webp' },
+            { id: 'bewi_sterilized', name: 'Bewi Cat Sterilized', category: 'أكياس دراي فود', price: 450, outOfStock: false, image: 'images/bewi-cat-sterilised.webp' },
+            { id: 'club_4_paws', name: 'Club 4 Paws Kitten 2kg', category: 'أكياس دراي فود', price: 950, outOfStock: false, image: 'images/club-4-paws-kitten.webp' },
+            { id: 'soft_friskies', name: 'Soft Friskies', category: 'أكل رطب (ويت فود)', price: 50, outOfStock: false, image: 'images/soft-friskies.webp' },
+            { id: 'soft_tommy', name: 'Soft Tommy', category: 'أكل رطب (ويت فود)', price: 70, outOfStock: false, image: 'images/soft-tommy.webp' },
+            { id: 'soft_pro_cat', name: 'Soft Pro Cat', category: 'أكل رطب (ويت فود)', price: 50, outOfStock: false, image: 'images/soft-pro-cat.webp' },
+            { id: 'sand_gold_10kg', name: 'رمل جولد 10 كيلو', category: 'رمل قطط', price: 200, outOfStock: false, image: 'images/gold-litter-10.webp' },
+            { id: 'sand_gold_5kg', name: 'رمل جولد 5 كيلو', category: 'رمل قطط', price: 100, outOfStock: false, image: 'images/gold-litter-5.webp' },
+            { id: 'sand_benti_10kg', name: 'رمل بنتي ساند 10 كيلو', category: 'رمل قطط', price: 270, outOfStock: false, image: 'images/penty-sand-10.webp' },
+            { id: 'sand_benti_5kg', name: 'رمل بنتي ساند 5 كيلو', category: 'رمل قطط', price: 140, outOfStock: false, image: 'images/penty-sand-5.webp' },
+            { id: 'treats_reward', name: 'تريتس مكافآت للحيوانات الأليفة', category: 'مكافآت وتريتس', price: 35, outOfStock: false },
+            // منتجات بضاعة الموقع الجديدة
+            { id: 'prod_ozzy_10l', name: 'رمل اوزي 10 لتر', category: 'رمل قطط', price: 220, outOfStock: false, image: 'بضاعه موقع/رمل اوزي 10 لتر.jfif' },
+            { id: 'prod_kiki_5l', name: 'رمل كيكي كات 5 لتر', category: 'رمل قطط', price: 120, outOfStock: false, image: 'بضاعه موقع/رمل كيكي كات 5 لتر.webp' },
+            { id: 'prod_kiki_10l', name: 'رمل كيكي كات 10 لتر', category: 'رمل قطط', price: 210, outOfStock: false, image: 'بضاعه موقع/رمل كيكي كات 10 لتر.webp' },
+            { id: 'prod_kiki_20l', name: 'رمل كيكي كات 20 لتر', category: 'رمل قطط', price: 390, outOfStock: false, image: 'بضاعه موقع/رمل كيكي كات 20 لتر.jfif' },
+            { id: 'prod_catmoon_salmon', name: 'كات مون سلمون', category: 'أكل رطب (ويت فود)', price: 60, outOfStock: false, image: 'بضاعه موقع/كات مون سلمون.webp' },
+            { id: 'prod_catmoon_chicken', name: 'كات مون فراخ', category: 'أكل رطب (ويت فود)', price: 60, outOfStock: false, image: 'بضاعه موقع/كات مون فراخ.webp' },
+            { id: 'prod_catmoon_kitten', name: 'كات مون كانز كيتن', category: 'أكل رطب (ويت فود)', price: 60, outOfStock: false, image: 'بضاعه موقع/كات مون كانز كيتين.jpg' },
+            { id: 'prod_catmoon_beef', name: 'كات مون لحمه', category: 'أكل رطب (ويت فود)', price: 60, outOfStock: false, image: 'بضاعه موقع/كات مون لحمه.webp' },
+            { id: 'prod_bewi_fish', name: 'كان بيوي سمك', category: 'أكل رطب (ويت فود)', price: 70, outOfStock: false, image: 'بضاعه موقع/كان بيوي سمك.webp' },
+            { id: 'prod_bewi_beef', name: 'كان بيوي لحمه', category: 'أكل رطب (ويت فود)', price: 70, outOfStock: false, image: 'بضاعه موقع/كان بيوي لحمه.webp' },
+            { id: 'prod_kibby_salmon_shrimp', name: 'كان كيبي سلمون و جمبري', category: 'أكل رطب (ويت فود)', price: 65, outOfStock: false, image: 'بضاعه موقع/كان كيبي سلمون و جمبري.webp' },
+            { id: 'prod_kibby_fish_veg', name: 'كان كيبي سمك وخضار', category: 'أكل رطب (ويت فود)', price: 65, outOfStock: false, image: 'بضاعه موقع/كان كيبي سمك وخضار.webp' },
+            { id: 'prod_kibby_chicken', name: 'كان كيبي فراخ', category: 'أكل رطب (ويت فود)', price: 65, outOfStock: false, image: 'بضاعه موقع/كان كيبي فراخ.webp' },
+            { id: 'prod_kibby_kitten_egg', name: 'كان كيبي كيتن فراخ و بيض', category: 'أكل رطب (ويت فود)', price: 65, outOfStock: false, image: 'بضاعه موقع/كان كيبي كيتين فراخ و بيض.webp' },
+            { id: 'prod_kibby_beef', name: 'كان كيبي لحمه', category: 'أكل رطب (ويت فود)', price: 65, outOfStock: false, image: 'بضاعه موقع/كان كيبي لحمه.webp' },
+            { id: 'prod_yummy_hearts', name: 'كان يامي قلوب', category: 'أكل رطب (ويت فود)', price: 55, outOfStock: false, image: 'بضاعه موقع/كاان يامي قلوب.png' },
+            { id: 'prod_yummy_fish', name: 'كان يامي سمك', category: 'أكل رطب (ويت فود)', price: 55, outOfStock: false, image: 'بضاعه موقع/كان يامي سمك.webp' },
+            { id: 'prod_yummy_liver', name: 'يامي كان طعم الكبد', category: 'أكل رطب (ويت فود)', price: 55, outOfStock: false, image: 'بضاعه موقع/يامي كان طعم الكبد.jpg' },
+            { id: 'prod_yummy_chicken', name: 'يامي كان فراخ', category: 'أكل رطب (ويت فود)', price: 55, outOfStock: false, image: 'بضاعه موقع/يامي كان فراخ.jpg' }
         ];
 
         let ALL_STORE_PRODUCTS = JSON.parse(JSON.stringify(INITIAL_STORE_PRODUCTS));
@@ -2346,6 +2366,11 @@
                              catStr.includes('رطب') ? '🥫' :
                              catStr.includes('مكافآت') ? '🍖' : '📦';
 
+                const imgSrc = p.image || p.img || '';
+                const imgHtml = imgSrc
+                    ? `<img class="product-img" src="${imgSrc}" alt="${p.name}" onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\\'product-img\\' style=\\'display:flex;align-items:center;justify-content:center;font-size:32px;background:var(--slot-bg);\\'>${icon}</div>';">`
+                    : `<div class="product-img" style="display:flex;align-items:center;justify-content:center;font-size:32px;background:var(--slot-bg);user-select:none;">${icon}</div>`;
+
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 card.setAttribute('data-name', `${p.name} ${catStr}`);
@@ -2353,7 +2378,7 @@
                 card.setAttribute('data-id', p.id);
 
                 card.innerHTML = `
-                    <div class="product-img" style="display:flex;align-items:center;justify-content:center;font-size:32px;background:var(--slot-bg);user-select:none;">${icon}</div>
+                    ${imgHtml}
                     <div class="product-body">
                         <div class="product-info">
                             <h3>${p.name}</h3>
@@ -2648,11 +2673,14 @@
                              catStr.includes('دراي') ? '🐱' :
                              catStr.includes('رطب') ? '🥫' :
                              catStr.includes('مكافآت') ? '🍖' : '📦';
+                const thumbHtml = (p.image || p.img)
+                    ? `<img src="${p.image || p.img}" style="width:38px;height:38px;border-radius:8px;object-fit:cover;border:1px solid var(--border-color);flex-shrink:0;" onerror="this.outerHTML='<div style=\\'font-size:22px;\\'>${icon}</div>';">`
+                    : `<div style="font-size:22px;">${icon}</div>`;
 
                 html += `
                     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--slot-bg);border:1px solid var(--border-color);border-radius:10px;gap:8px;flex-wrap:wrap;">
                         <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:180px;">
-                            <div style="font-size:22px;">${icon}</div>
+                            ${thumbHtml}
                             <div>
                                 <div style="display:flex;align-items:center;gap:6px;">
                                     <div style="font-weight:bold;font-size:13.5px;color:var(--text-color);">${p.name || p.title}</div>
@@ -3398,6 +3426,7 @@
                                          (typeof item.available !== 'undefined') ? !item.available :
                                          (typeof item.inStock !== 'undefined') ? !item.inStock : false;
                             const created = item.createdAt || (typeof id === 'string' && id.startsWith('prod_') ? Number(id.replace('prod_', '')) : 0);
+                            const image = item.image || item.img || initItem.image || '';
 
                             return {
                                 id: id,
@@ -3409,6 +3438,8 @@
                                 outOfStock: out,
                                 available: !out,
                                 inStock: !out,
+                                image: image,
+                                img: image,
                                 createdAt: created
                             };
                         });
@@ -3422,6 +3453,8 @@
                                     cat: initP.category,
                                     available: !initP.outOfStock,
                                     inStock: !initP.outOfStock,
+                                    image: initP.image || '',
+                                    img: initP.image || '',
                                     createdAt: 0
                                 });
                             }
