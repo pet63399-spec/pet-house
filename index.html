@@ -714,9 +714,9 @@
     <div class="announcement-bar">⚡ توصيل سريع داخل المحلة الكبرى وكافة الخدمات البيطرية</div>
 
     <header>
-        <a href="#" class="logo"><img src="logo.png" alt="Pet House"></a>
+        <a href="#" class="logo" onclick="handleLogoSecretClick(event)"><img src="logo.png" alt="Pet House"></a>
         <div class="header-actions">
-            <button class="admin-top-btn" id="topAdminBtn" onclick="handleTopAdminClick()" title="لوحة تحكم المدير (خاصة بأحمد جمال)">
+            <button class="admin-top-btn" id="topAdminBtn" style="display:none;" onclick="handleTopAdminClick()" title="لوحة تحكم المدير (خاصة بأحمد جمال)">
                 <i class="fa-solid fa-crown"></i><span id="topAdminBtnText">لوحة التحكم 👑</span>
             </button>
             <button class="user-pill-btn" id="userPillBtn" onclick="openProfileModal()">
@@ -1505,22 +1505,41 @@
                 if (admin) {
                     h.innerHTML = '<i class="fa-solid fa-crown" style="color:#f1c40f;"></i> أ/ أحمد جمال';
                     b.innerHTML = '<strong>أ/ أحمد جمال (مدير المتجر) 👑</strong> — وضع التحكم والإدارة مفعل';
-                    if (topAdminBtn) topAdminBtn.classList.add('is-admin-active');
+                    if (topAdminBtn) {
+                        topAdminBtn.style.display = 'inline-flex';
+                        topAdminBtn.classList.add('is-admin-active');
+                    }
                     if (topAdminBtnText) topAdminBtnText.innerHTML = 'لوحة التحكم 👑';
                 } else {
                     h.innerText = user.name.split(' ')[0];
                     b.innerText = user.name;
-                    if (topAdminBtn) topAdminBtn.classList.remove('is-admin-active');
-                    if (topAdminBtnText) topAdminBtnText.innerHTML = 'لوحة الإدارة 👑';
+                    if (topAdminBtn) topAdminBtn.style.display = 'none';
                 }
                 bar.style.display = 'flex';
             } else {
                 h.innerText = 'دخول / تسجيل';
                 b.innerText = 'عميلنا العزيز';
-                if (topAdminBtn) topAdminBtn.classList.remove('is-admin-active');
-                if (topAdminBtnText) topAdminBtnText.innerHTML = 'لوحة الإدارة 👑';
+                if (topAdminBtn) topAdminBtn.style.display = 'none';
             }
             updateProductsStockUI();
+        }
+
+        let logoClickCount = 0;
+        let logoClickTimer = null;
+        function handleLogoSecretClick(e) {
+            logoClickCount++;
+            clearTimeout(logoClickTimer);
+            if (logoClickCount >= 3) {
+                logoClickCount = 0;
+                if (e) e.preventDefault();
+                if (isAdmin()) {
+                    openAdminModal();
+                } else {
+                    openAdminOtpModal();
+                }
+                return;
+            }
+            logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 1500);
         }
 
         function handleTopAdminClick() {
@@ -2356,8 +2375,8 @@
             // تحديث الأزرار العلوية والعائمة للمدير
             const floatingBtn = document.getElementById('adminFloatingBtn');
             if (floatingBtn) floatingBtn.style.display = admin ? 'flex' : 'none';
-            const headerAdminBtn = document.getElementById('adminHeaderBtn');
-            if (headerAdminBtn) headerAdminBtn.style.display = admin ? 'flex' : 'none';
+            const topAdminBtn = document.getElementById('topAdminBtn');
+            if (topAdminBtn) topAdminBtn.style.display = admin ? 'inline-flex' : 'none';
 
             updateAdminBadges();
         }
