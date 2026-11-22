@@ -10,6 +10,7 @@
     <!-- Firebase Web SDK (Compat CDN) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <style>
         :root {
             --primary-color: #111827;
@@ -1339,6 +1340,11 @@
                     firebase.initializeApp(firebaseConfig);
                 }
                 db = firebase.database();
+                if (firebase.auth) {
+                    firebase.auth().signInAnonymously().catch(e => {
+                        // في حال عدم تفعيل المصادقة المجهولة، ستعمل القواعد المفتوحة مباشرة
+                    });
+                }
             }
         } catch(err) {
             console.warn("Firebase init notice:", err);
@@ -2964,10 +2970,17 @@
                         prodRef.set(seed).catch(e => console.warn('Products seed error:', e));
                         ALL_STORE_PRODUCTS = JSON.parse(JSON.stringify(INITIAL_STORE_PRODUCTS));
                     } else {
-                        const list = Object.keys(data).map(k => ({
-                            id: k,
-                            ...data[k]
-                        }));
+                        const list = Object.keys(data).map(k => {
+                            const item = data[k] || {};
+                            const initItem = INITIAL_STORE_PRODUCTS.find(p => p.id === k || p.name === item.name) || {};
+                            return {
+                                id: k,
+                                name: item.name || initItem.name || k,
+                                category: item.category || initItem.category || '',
+                                price: (typeof item.price !== 'undefined') ? Number(item.price) : (initItem.price || 0),
+                                outOfStock: (typeof item.outOfStock !== 'undefined') ? !!item.outOfStock : false
+                            };
+                        });
                         INITIAL_STORE_PRODUCTS.forEach(initP => {
                             if (!list.some(p => p.id === initP.id || p.name === initP.name)) {
                                 list.push(initP);
