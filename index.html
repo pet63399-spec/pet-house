@@ -757,6 +757,7 @@
             <div class="filter-chip" onclick="filterSection('food', this)">🍗 دراي فود</div>
             <div class="filter-chip" onclick="filterSection('wet', this)">🥫 أكل رطب</div>
             <div class="filter-chip" onclick="filterSection('litter', this)">🪣 رمل قطط</div>
+            <div class="filter-chip" id="filterChipGeneral" style="display:none;" onclick="filterSection('general', this)">📦 مستلزمات عامة</div>
             <div class="filter-chip" onclick="filterSection('grooming', this)">✂️ جرومينج</div>
             <div class="filter-chip" onclick="scrollToFoodGuide(this)">🐾 دليل الأطعمة</div>
         </div>
@@ -944,6 +945,12 @@
                 </div>
 
             </div>
+        </div>
+
+        <!-- ===== قسم المستلزمات والمكافآت العامة ===== -->
+        <div class="section-block" data-section="general" id="sectionBlockGeneral" style="display:none;">
+            <div class="section-title"><span>مستلزمات ومكافآت عامة</span><i class="fa-solid fa-boxes-stacked" style="color:var(--accent-color);"></i></div>
+            <div class="grid"></div>
         </div>
 
         <!-- ===== قسم خدمات الجرومينج ===== -->
@@ -2297,7 +2304,78 @@
             }
         }
 
+        function getSectionTarget(cat) {
+            if (!cat) return 'food';
+            const c = cat.toString().toLowerCase();
+            if (c.includes('دراي') || c.includes('dry') || c.includes('أكياس') || c.includes('طعام جاف')) return 'food';
+            if (c.includes('رطب') || c.includes('wet') || c.includes('سوفت') || c.includes('طعام رطب')) return 'wet';
+            if (c.includes('رمل') || c.includes('litter') || c.includes('ساند')) return 'litter';
+            return 'general';
+        }
+
+        function renderDynamicProducts() {
+            // حذف أي كروت سابقة مضافة ديناميكياً لتجنب التكرار
+            document.querySelectorAll('.product-card[data-dynamic="true"]').forEach(el => el.remove());
+
+            // حصر أسماء المنتجات الثابتة المكتوبة في ملف HTML
+            const staticNames = new Set();
+            document.querySelectorAll('.product-card:not([data-dynamic="true"])').forEach(c => {
+                const btn = c.querySelector('.btn-action');
+                if (btn) {
+                    const m = (btn.getAttribute('onclick') || '').match(/addItem\(\s*['"]([^'"]+)['"]/);
+                    if (m) staticNames.add(m[1].trim());
+                }
+            });
+
+            let hasGeneral = false;
+            // تصفية المنتجات المضافة ديناميكياً من Firebase
+            const dynamicProds = ALL_STORE_PRODUCTS.filter(p => !staticNames.has(p.name));
+
+            dynamicProds.forEach(p => {
+                const sec = getSectionTarget(p.category || p.cat);
+                if (sec === 'general') hasGeneral = true;
+
+                let secBlock = document.querySelector(`.section-block[data-section="${sec}"]`);
+                if (!secBlock) secBlock = document.querySelector('.section-block[data-section="food"]');
+                const grid = secBlock ? secBlock.querySelector('.grid') : null;
+                if (!grid) return;
+
+                const catStr = (p.category || p.cat || '');
+                const icon = catStr.includes('رمل') ? '🏖️' :
+                             catStr.includes('دراي') ? '🐱' :
+                             catStr.includes('رطب') ? '🥫' :
+                             catStr.includes('مكافآت') ? '🍖' : '📦';
+
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.setAttribute('data-name', `${p.name} ${catStr}`);
+                card.setAttribute('data-dynamic', 'true');
+                card.setAttribute('data-id', p.id);
+
+                card.innerHTML = `
+                    <div class="product-img" style="display:flex;align-items:center;justify-content:center;font-size:32px;background:var(--slot-bg);user-select:none;">${icon}</div>
+                    <div class="product-body">
+                        <div class="product-info">
+                            <h3>${p.name}</h3>
+                            <p>${p.category || p.cat || 'متوفر'}</p>
+                            <div class="product-price">${p.price} جنيه</div>
+                        </div>
+                        <button class="btn-action" onclick="addItem('${p.name}', ${p.price})"><i class="fa-solid fa-plus"></i> إضافة</button>
+                    </div>
+                `;
+
+                // وضع المنتج الجديد في بداية قائمة القسم
+                grid.insertBefore(card, grid.firstChild);
+            });
+
+            const genSec = document.getElementById('sectionBlockGeneral');
+            const genChip = document.getElementById('filterChipGeneral');
+            if (genSec) genSec.style.display = hasGeneral ? 'block' : 'none';
+            if (genChip) genChip.style.display = hasGeneral ? 'inline-block' : 'none';
+        }
+
         function updateProductsStockUI() {
+            renderDynamicProducts();
             const admin = isAdmin();
 
             document.querySelectorAll('.product-card').forEach(card => {
@@ -2427,23 +2505,28 @@
             const newProd = {
                 id: id,
                 name: name,
+                title: name,
                 category: cat,
-                price: price,
-                outOfStock: false
+                cat: cat,
+                price: Number(price),
+                outOfStock: false,
+                available: true,
+                inStock: true,
+                createdAt: Date.now()
             };
 
             if (db) {
                 db.ref('products/' + id).set(newProd).then(() => {
-                    alert(`✅ تم إضافة منتج "${name}" بنجاح في المتجر و Firebase!`);
+                    alert(`✅ تم حفظ منتج "${name}" في Firebase والمتجر بنجاح!`);
                     if (nameInp) nameInp.value = '';
                     if (priceInp) priceInp.value = '';
                     toggleNewProductForm(false);
                 }).catch(err => {
-                    alert('حدث خطأ أثناء حفظ المنتج في Firebase');
+                    alert('❌ حدث خطأ أثناء حفظ المنتج في Firebase: ' + (err.message || err));
                     console.error(err);
                 });
             } else {
-                ALL_STORE_PRODUCTS.push(newProd);
+                ALL_STORE_PRODUCTS.unshift(newProd);
                 updateProductsStockUI();
                 renderAdminProductsList();
                 toggleNewProductForm(false);
@@ -2547,8 +2630,8 @@
             let filtered = ALL_STORE_PRODUCTS;
             if (adminProductSearchQuery) {
                 filtered = ALL_STORE_PRODUCTS.filter(p =>
-                    (p.name && p.name.toLowerCase().includes(adminProductSearchQuery)) ||
-                    (p.category && p.category.toLowerCase().includes(adminProductSearchQuery))
+                    ((p.name || p.title) && (p.name || p.title).toLowerCase().includes(adminProductSearchQuery)) ||
+                    ((p.category || p.cat) && (p.category || p.cat).toLowerCase().includes(adminProductSearchQuery))
                 );
             }
 
@@ -2560,7 +2643,11 @@
             let html = '';
             filtered.forEach(p => {
                 const isOut = !!p.outOfStock;
-                const icon = p.category.includes('رمل') ? '🏖️' : p.category.includes('دراي') ? '🐱' : p.category.includes('رطب') ? '🥫' : p.category.includes('مكافآت') ? '🍖' : '📦';
+                const catStr = (p.category || p.cat || '');
+                const icon = catStr.includes('رمل') ? '🏖️' :
+                             catStr.includes('دراي') ? '🐱' :
+                             catStr.includes('رطب') ? '🥫' :
+                             catStr.includes('مكافآت') ? '🍖' : '📦';
 
                 html += `
                     <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--slot-bg);border:1px solid var(--border-color);border-radius:10px;gap:8px;flex-wrap:wrap;">
@@ -2568,20 +2655,20 @@
                             <div style="font-size:22px;">${icon}</div>
                             <div>
                                 <div style="display:flex;align-items:center;gap:6px;">
-                                    <div style="font-weight:bold;font-size:13.5px;color:var(--text-color);">${p.name}</div>
+                                    <div style="font-weight:bold;font-size:13.5px;color:var(--text-color);">${p.name || p.title}</div>
                                     <button type="button" onclick="adminEditProductName('${p.id}')" style="background:none;border:none;color:var(--gray-color);cursor:pointer;font-size:11px;" title="تعديل اسم الصنف"><i class="fa-solid fa-pen"></i></button>
                                 </div>
                                 <div style="font-size:11.5px;color:var(--gray-color);display:flex;align-items:center;gap:6px;margin-top:2px;">
-                                    <span>${p.category}</span> • 
+                                    <span>${catStr || 'عام'}</span> • 
                                     <button type="button" onclick="adminEditPrice('${p.id}')" style="background:rgba(39,174,96,0.1);border:1px dashed var(--accent-color);color:var(--accent-color);padding:2px 7px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:11px;" title="اضغط لتعديل السعر"><i class="fa-solid fa-pen-to-square"></i> ${p.price} ج.م</button>
                                 </div>
                             </div>
                         </div>
                         <div style="display:flex;align-items:center;gap:6px;">
-                            <button type="button" onclick="adminToggleStock('${p.name}')" style="padding:6px 11px;border-radius:8px;font-size:11.5px;font-weight:bold;cursor:pointer;border:none;display:flex;align-items:center;gap:5px;${isOut ? 'background:#e74c3c;color:#fff;' : 'background:#27ae60;color:#fff;'}">
+                            <button type="button" onclick="adminToggleStock('${p.name || p.title}')" style="padding:6px 11px;border-radius:8px;font-size:11.5px;font-weight:bold;cursor:pointer;border:none;display:flex;align-items:center;gap:5px;${isOut ? 'background:#e74c3c;color:#fff;' : 'background:#27ae60;color:#fff;'}">
                                 ${isOut ? '<i class="fa-solid fa-ban"></i> نفذت (اجعله متوفر)' : '<i class="fa-solid fa-check"></i> متوفر (اجعله نفذ)'}
                             </button>
-                            <button type="button" onclick="adminDeleteProduct('${p.id}', '${p.name}')" style="background:none;border:none;color:#e74c3c;cursor:pointer;padding:6px;font-size:13px;" title="حذف الصنف نهائياً"><i class="fa-regular fa-trash-can"></i></button>
+                            <button type="button" onclick="adminDeleteProduct('${p.id}', '${p.name || p.title}')" style="background:none;border:none;color:#e74c3c;cursor:pointer;padding:6px;font-size:13px;" title="حذف الصنف نهائياً"><i class="fa-regular fa-trash-can"></i></button>
                         </div>
                     </div>
                 `;
@@ -3287,23 +3374,63 @@
                         prodRef.set(seed).catch(e => console.warn('Products seed error:', e));
                         ALL_STORE_PRODUCTS = JSON.parse(JSON.stringify(INITIAL_STORE_PRODUCTS));
                     } else {
-                        const list = Object.keys(data).map(k => {
-                            const item = data[k] || {};
-                            const initItem = INITIAL_STORE_PRODUCTS.find(p => p.id === k || p.name === item.name) || {};
+                        // قراءة البيانات من Firebase وتحويلها إلى مصفوفة نظيفة سواء كانت Array أو Object
+                        let rawList = [];
+                        if (Array.isArray(data)) {
+                            rawList = data.filter(Boolean);
+                        } else if (typeof data === 'object' && data !== null) {
+                            rawList = Object.keys(data).map(k => {
+                                const item = data[k];
+                                if (typeof item === 'object' && item !== null) {
+                                    return { ...item, id: item.id || k };
+                                }
+                                return { id: k, name: String(item) };
+                            });
+                        }
+
+                        const parsedList = rawList.map((item, idx) => {
+                            const id = item.id || ('prod_' + idx);
+                            const initItem = INITIAL_STORE_PRODUCTS.find(p => p.id === id || p.name === (item.name || item.title)) || {};
+                            const name = item.name || item.title || item.productName || item.product_name || initItem.name || id;
+                            const cat = item.category || item.cat || item.section || initItem.category || 'أكياس دراي فود';
+                            const price = (typeof item.price !== 'undefined') ? Number(item.price) : ((typeof item.cost !== 'undefined') ? Number(item.cost) : (initItem.price || 0));
+                            const out = (typeof item.outOfStock !== 'undefined') ? !!item.outOfStock :
+                                         (typeof item.available !== 'undefined') ? !item.available :
+                                         (typeof item.inStock !== 'undefined') ? !item.inStock : false;
+                            const created = item.createdAt || (typeof id === 'string' && id.startsWith('prod_') ? Number(id.replace('prod_', '')) : 0);
+
                             return {
-                                id: k,
-                                name: item.name || initItem.name || k,
-                                category: item.category || initItem.category || '',
-                                price: (typeof item.price !== 'undefined') ? Number(item.price) : (initItem.price || 0),
-                                outOfStock: (typeof item.outOfStock !== 'undefined') ? !!item.outOfStock : false
+                                id: id,
+                                name: name,
+                                title: name,
+                                category: cat,
+                                cat: cat,
+                                price: price,
+                                outOfStock: out,
+                                available: !out,
+                                inStock: !out,
+                                createdAt: created
                             };
                         });
+
+                        // دمج أي منتجات أولية غير موجودة في الـ snapshot
                         INITIAL_STORE_PRODUCTS.forEach(initP => {
-                            if (!list.some(p => p.id === initP.id || p.name === initP.name)) {
-                                list.push(initP);
+                            if (!parsedList.some(p => p.id === initP.id || p.name === initP.name)) {
+                                parsedList.push({
+                                    ...initP,
+                                    title: initP.name,
+                                    cat: initP.category,
+                                    available: !initP.outOfStock,
+                                    inStock: !initP.outOfStock,
+                                    createdAt: 0
+                                });
                             }
                         });
-                        ALL_STORE_PRODUCTS = list;
+
+                        // ترتيب القائمة بحيث تظهر المنتجات المضافة حديثاً في أعلى القائمة أولاً
+                        parsedList.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+                        ALL_STORE_PRODUCTS = parsedList;
                     }
                     updateProductsStockUI();
                     renderAdminProductsList();
