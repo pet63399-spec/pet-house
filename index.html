@@ -1539,7 +1539,7 @@
     <!-- نافذة لوحة تحكم الإدارة (أحمد جمال) -->
     <div class="modal-overlay" id="adminModal">
         <div class="modal-card" style="max-width: 620px; max-height: 88vh; overflow-y: auto;">
-            <div class="modal-header" style="border-bottom: 2px solid #f1c40f; padding-bottom: 12px;">
+            <div class="modal-header" style="border-bottom: 2px solid #f1c40f; padding-bottom: 12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
                 <div style="display:flex;align-items:center;gap:10px;">
                     <div style="width:40px;height:40px;border-radius:50%;background:#f1c40f;color:#2c3e50;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 2px 8px rgba(241,196,15,0.4);"><i class="fa-solid fa-crown"></i></div>
                     <div>
@@ -1547,7 +1547,12 @@
                         <div style="font-size:12px;color:var(--gray-color);">أهلاً أ/ أحمد جمال (01002808287)</div>
                     </div>
                 </div>
-                <button class="btn-close-modal" onclick="closeAdminModal()"><i class="fa-solid fa-xmark"></i></button>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button type="button" id="btnTestBell" onclick="testNotificationBell()" style="background:rgba(39,174,96,0.12);color:var(--accent-color);border:1px solid var(--accent-color);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:bold;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s ease;" title="اختبار نغمة جرس التنبيه">
+                        <i class="fa-solid fa-bell"></i> 🔊 تجربة الجرس
+                    </button>
+                    <button class="btn-close-modal" onclick="closeAdminModal()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
             </div>
 
             <!-- شريط الإحصائيات السريعة -->
@@ -2850,12 +2855,100 @@
             }
         }
 
+        // ==========================================
+        // === نظام جرس تنبيه لوحة تحكم المدير (Web Audio API) ===
+        // ==========================================
+        let adminAudioContext = null;
+        let adminDashboardOpened = false;
+
+        function getAdminAudioContext() {
+            if (!adminAudioContext) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                    adminAudioContext = new AudioCtx();
+                }
+            }
+            if (adminAudioContext && adminAudioContext.state === 'suspended') {
+                adminAudioContext.resume().catch(() => {});
+            }
+            return adminAudioContext;
+        }
+
+        function playNotificationBell() {
+            try {
+                const ctx = getAdminAudioContext();
+                if (!ctx) return;
+
+                const runChime = () => {
+                    const now = ctx.currentTime;
+                    // نغمة جرس تنبيه ثنائية لطيفة ومسموعة (A5 -> D6)
+                    playBellTone(ctx, 880, now, 0.45, 0.3);
+                    playBellTone(ctx, 1760, now, 0.35, 0.08);
+
+                    playBellTone(ctx, 1174.66, now + 0.18, 0.9, 0.35);
+                    playBellTone(ctx, 2349.32, now + 0.18, 0.7, 0.1);
+                };
+
+                if (ctx.state === 'suspended') {
+                    ctx.resume().then(runChime).catch(runChime);
+                } else {
+                    runChime();
+                }
+            } catch(e) {
+                console.warn('Notification bell audio error:', e);
+            }
+        }
+
+        function playBellTone(ctx, freq, startTime, duration, maxGain) {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, startTime);
+            osc.frequency.exponentialRampToValueAtTime(freq * 0.99, startTime + duration);
+
+            gain.gain.setValueAtTime(0.0001, startTime);
+            gain.gain.exponentialRampToValueAtTime(maxGain, startTime + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(startTime);
+            osc.stop(startTime + duration + 0.05);
+        }
+
+        function testNotificationBell() {
+            playNotificationBell();
+            const btn = document.getElementById('btnTestBell');
+            if (btn) {
+                const orig = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-volume-high"></i> يرن الآن...';
+                btn.style.transform = 'scale(0.96)';
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> ✅ الصوت يعمل!';
+                    btn.style.transform = 'scale(1)';
+                }, 500);
+                setTimeout(() => {
+                    btn.innerHTML = orig;
+                }, 1800);
+            }
+        }
+
+        window.addEventListener('click', () => {
+            if (adminAudioContext && adminAudioContext.state === 'suspended') {
+                adminAudioContext.resume().catch(() => {});
+            }
+        }, { passive: true });
+
         function openAdminModal() {
             if (!isAdmin()) {
                 alert('عفواً، يجب تسجيل الدخول برقم المدير (01002808287) للوصول للوحة التحكم.');
                 openAuthModal();
                 return;
             }
+            adminDashboardOpened = true;
+            getAdminAudioContext();
             renderAdminProductsList();
             renderAdminBookingsList();
             renderAdminOrdersList();
@@ -3705,12 +3798,29 @@
             }
         }
 
+        let knownAppointmentKeys = null;
+
         function initFirebaseAppointments() {
             if (!db) return;
             try {
                 const apptRef = db.ref('appointments');
                 apptRef.on('value', snapshot => {
                     const data = snapshot.val() || {};
+                    const currentKeys = Object.keys(data);
+
+                    if (knownAppointmentKeys === null) {
+                        // التحميل الأولي عند بدء التشغيل - لا يرن للبيانات القديمة
+                        knownAppointmentKeys = new Set(currentKeys);
+                    } else {
+                        const hasNewAppt = currentKeys.some(k => !knownAppointmentKeys.has(k));
+                        currentKeys.forEach(k => knownAppointmentKeys.add(k));
+
+                        const isDashboardActive = adminDashboardOpened || (document.getElementById('adminModal') && document.getElementById('adminModal').classList.contains('active'));
+                        if (hasNewAppt && isDashboardActive) {
+                            playNotificationBell();
+                        }
+                    }
+
                     firebaseAppointmentsMap = data;
                     const todayStr = getLocalDateString(0);
                     const slots = [];
@@ -3743,12 +3853,29 @@
             }
         }
 
+        let knownOrderKeys = null;
+
         function initFirebaseOrders() {
             if (!db) return;
             try {
                 const ordersRef = db.ref('orders');
                 ordersRef.on('value', snapshot => {
                     const data = snapshot.val() || {};
+                    const currentKeys = Object.keys(data);
+
+                    if (knownOrderKeys === null) {
+                        // التحميل الأولي عند بدء التشغيل - لا يرن للطلبات القديمة
+                        knownOrderKeys = new Set(currentKeys);
+                    } else {
+                        const hasNewOrder = currentKeys.some(k => !knownOrderKeys.has(k));
+                        currentKeys.forEach(k => knownOrderKeys.add(k));
+
+                        const isDashboardActive = adminDashboardOpened || (document.getElementById('adminModal') && document.getElementById('adminModal').classList.contains('active'));
+                        if (hasNewOrder && isDashboardActive) {
+                            playNotificationBell();
+                        }
+                    }
+
                     firebaseOrdersList = Object.keys(data).map(k => ({
                         firebaseKey: k,
                         ...data[k]
