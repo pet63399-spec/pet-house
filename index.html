@@ -757,7 +757,7 @@
             <div class="filter-chip" onclick="filterSection('food', this)">🍗 دراي فود</div>
             <div class="filter-chip" onclick="filterSection('wet', this)">🥫 أكل رطب</div>
             <div class="filter-chip" onclick="filterSection('litter', this)">🪣 رمل قطط</div>
-            <div class="filter-chip" id="filterChipGeneral" style="display:none;" onclick="filterSection('general', this)">📦 مستلزمات عامة</div>
+            <div class="filter-chip" id="filterChipGeneral" onclick="filterSection('general', this)">🍖 مكافآت وتريتس</div>
             <div class="filter-chip" onclick="filterSection('grooming', this)">✂️ جرومينج</div>
             <div class="filter-chip" onclick="scrollToFoodGuide(this)">🐾 دليل الأطعمة</div>
         </div>
@@ -1176,9 +1176,59 @@
         </div>
 
         <!-- ===== قسم المستلزمات والمكافآت العامة ===== -->
-        <div class="section-block" data-section="general" id="sectionBlockGeneral" style="display:none;">
-            <div class="section-title"><span>مستلزمات ومكافآت عامة</span><i class="fa-solid fa-boxes-stacked" style="color:var(--accent-color);"></i></div>
-            <div class="grid"></div>
+        <div class="section-block" data-section="general" id="sectionBlockGeneral">
+            <div class="section-title"><span>مكافآت وتريتس ومستلزمات</span><i class="fa-solid fa-bone" style="color:var(--accent-color);"></i></div>
+            <div class="grid">
+
+                <div class="product-card" data-name="اورجو مكافات كلاب كبد Orgo Dog Treats Liver">
+                    <img class="product-img" src="images/orgo-liver.webp" alt="اورجو مكافات كلاب كبد" onerror="this.onerror=null;this.src=encodeURI('بضاعه موقع/اورجو مكافات كلاب كبد.webp');">
+                    <div class="product-body">
+                        <div class="product-info">
+                            <h3>اورجو مكافات كلاب كبد</h3>
+                            <p>مكافآت شهية للكلاب بنكهة الكبد</p>
+                            <div class="product-price">65 جنيه</div>
+                        </div>
+                        <button class="btn-action" onclick="addItem('اورجو مكافات كلاب كبد', 65)"><i class="fa-solid fa-plus"></i> إضافة</button>
+                    </div>
+                </div>
+
+                <div class="product-card" data-name="دريمز مكافات فراخ Dreamies Chicken Treats">
+                    <img class="product-img" src="images/dreamies-chicken.webp" alt="دريمز مكافات فراخ" onerror="this.onerror=null;this.src=encodeURI('بضاعه موقع/دريمز مكافات فراخ.webp');">
+                    <div class="product-body">
+                        <div class="product-info">
+                            <h3>دريمز مكافات فراخ</h3>
+                            <p>مكافآت مقرمشة ومحشوة للقطط بالدجاج</p>
+                            <div class="product-price">65 جنيه</div>
+                        </div>
+                        <button class="btn-action" onclick="addItem('دريمز مكافات فراخ', 65)"><i class="fa-solid fa-plus"></i> إضافة</button>
+                    </div>
+                </div>
+
+                <div class="product-card" data-name="وينبي تريتس 90 جرام بط Wanpy Treats Duck 90g">
+                    <img class="product-img" src="images/wanpy-treats-90g-duck.webp" alt="وينبي تريتس 90 جرام بط" onerror="this.onerror=null;this.src=encodeURI('بضاعه موقع/وينبي تريتس 90 جرام بط.webp');">
+                    <div class="product-body">
+                        <div class="product-info">
+                            <h3>وينبي تريتس 90 جرام بط</h3>
+                            <p>تريتس وينبي لحم بط طبيعي 90 جرام</p>
+                            <div class="product-price">75 جنيه</div>
+                        </div>
+                        <button class="btn-action" onclick="addItem('وينبي تريتس 90 جرام بط', 75)"><i class="fa-solid fa-plus"></i> إضافة</button>
+                    </div>
+                </div>
+
+                <div class="product-card" data-name="وينبي تريتس 90 جرام Wanpy Treats 90g">
+                    <img class="product-img" src="images/wanpy-treats-90g.webp" alt="وينبي تريتس 90 جرام" onerror="this.onerror=null;this.src=encodeURI('بضاعه موقع/وينبي تريتس90جرام.webp');">
+                    <div class="product-body">
+                        <div class="product-info">
+                            <h3>وينبي تريتس 90 جرام</h3>
+                            <p>تريتس وينبي طبيعي فاخر 90 جرام</p>
+                            <div class="product-price">75 جنيه</div>
+                        </div>
+                        <button class="btn-action" onclick="addItem('وينبي تريتس 90 جرام', 75)"><i class="fa-solid fa-plus"></i> إضافة</button>
+                    </div>
+                </div>
+
+            </div>
         </div>
 
         <!-- ===== قسم خدمات الجرومينج ===== -->
@@ -2489,7 +2539,12 @@
             { id: 'prod_yummy_hearts', name: 'كان يامي قلوب', category: 'أكل رطب (ويت فود)', price: 55, outOfStock: false, image: 'images/yummy-hearts.png' },
             { id: 'prod_yummy_fish', name: 'كان يامي سمك', category: 'أكل رطب (ويت فود)', price: 55, outOfStock: false, image: 'images/yummy-fish.webp' },
             { id: 'prod_yummy_liver', name: 'يامي كان طعم الكبد', category: 'أكل رطب (ويت فود)', price: 55, outOfStock: false, image: 'images/yummy-liver.jpg' },
-            { id: 'prod_yummy_chicken', name: 'يامي كان فراخ', category: 'أكل رطب (ويت فود)', price: 55, outOfStock: false, image: 'images/yummy-chicken.jpg' }
+            { id: 'prod_yummy_chicken', name: 'يامي كان فراخ', category: 'أكل رطب (ويت فود)', price: 55, outOfStock: false, image: 'images/yummy-chicken.jpg' },
+            // منتجات المكافآت والتريتس الجديدة
+            { id: 'prod_orgo_liver', name: 'اورجو مكافات كلاب كبد', category: 'مكافآت وتريتس', price: 65, outOfStock: false, image: 'images/orgo-liver.webp' },
+            { id: 'prod_dreamies_chicken', name: 'دريمز مكافات فراخ', category: 'مكافآت وتريتس', price: 65, outOfStock: false, image: 'images/dreamies-chicken.webp' },
+            { id: 'prod_wanpy_duck_90g', name: 'وينبي تريتس 90 جرام بط', category: 'مكافآت وتريتس', price: 75, outOfStock: false, image: 'images/wanpy-treats-90g-duck.webp' },
+            { id: 'prod_wanpy_90g', name: 'وينبي تريتس 90 جرام', category: 'مكافآت وتريتس', price: 75, outOfStock: false, image: 'images/wanpy-treats-90g.webp' }
         ];
 
         let ALL_STORE_PRODUCTS = JSON.parse(JSON.stringify(INITIAL_STORE_PRODUCTS));
