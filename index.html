@@ -1555,8 +1555,8 @@
                 تم استلام وتأكيد طلبك بنجاح! 🎉
             </h3>
             
-            <p style="font-size: 12.5px; color: var(--gray-color); line-height: 1.5;">
-                تم تسجيل الأوردر مباشرة في النظام وجاري تجهيزه للتوصيل دون الحاجة لمغادرة الموقع.
+            <p style="font-size: 13px; color: var(--text-color); line-height: 1.6; margin: 8px 0 12px;">
+                تم تسجيل الأوردر مباشرة في النظام وجاري تجهيزه للتوصيل، وسيتواصل معك فريق Pet House لتأكيد ميعاد التوصيل على الفور.
             </p>
 
             <!-- شارة رقم الطلب -->
@@ -1570,18 +1570,15 @@
                 <!-- dynamic items inserted here -->
             </div>
 
-            <div style="background: var(--notice-bg); border: 1px solid var(--notice-border); color: var(--notice-text); padding: 9px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 8px; text-align: right;">
+            <div style="background: var(--notice-bg); border: 1px solid var(--notice-border); color: var(--notice-text); padding: 9px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 8px; text-align: right; margin-top: 10px;">
                 <i class="fa-solid fa-phone-volume"></i>
                 <span>سيتواصل معك فريق Pet House لتأكيد ميعاد التوصيل على الفور.</span>
             </div>
 
-            <div style="display:flex; flex-direction:column; gap:8px; margin-top:5px;">
-                <button class="btn-primary" onclick="closeOrderSuccessModal()">
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top:14px;">
+                <button class="btn-primary" onclick="closeOrderSuccessModal()" style="padding: 12px 16px; font-size: 14px; font-weight: bold; width: 100%;">
                     <i class="fa-solid fa-house"></i> العودة للمتجر ومتابعة التسوق
                 </button>
-                <a id="btnOptionalWhatsApp" href="#" target="_blank" class="btn-secondary" style="display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; color: #25d366; text-decoration:none;">
-                    <i class="fa-brands fa-whatsapp"></i> فتح المحادثة على واتساب (اختياري)
-                </a>
             </div>
         </div>
     </div>
@@ -3542,7 +3539,7 @@
             }
         }
 
-        function showOrderSuccessModal(order, waText) {
+        function showOrderSuccessModal(order) {
             document.getElementById('successOrderId').innerText = '#' + order.id;
             
             const box = document.getElementById('successInvoiceBox');
@@ -3576,12 +3573,6 @@
                     <span class="val" style="font-size: 16px;">${order.grandTotal} ج.م</span>
                 </div>
             `;
-
-            // الرابط الاختياري للواتساب في حال رغب العميل بالتواصل يدوياً
-            const optBtn = document.getElementById('btnOptionalWhatsApp');
-            if (optBtn) {
-                optBtn.href = `https://wa.me/201210556177?text=${encodeURIComponent(waText)}`;
-            }
 
             document.getElementById('orderSuccessModal').classList.add('active');
         }
@@ -3675,12 +3666,8 @@
 
             saveOrderToHistory(fullOrder);
 
-            // فتح رابط واتساب (wa.me) لإرسال تفاصيل الطلب إلى رقم واتساب الشغل
-            const waUrl = `https://wa.me/201210556177?text=${encodeURIComponent(text)}`;
-            window.open(waUrl, '_blank');
-
             // عرض نافذة تأكيد الطلب الفورية داخل الموقع
-            showOrderSuccessModal(fullOrder, text);
+            showOrderSuccessModal(fullOrder);
 
             // تفريغ السلة وإغلاق نافذة السلة
             cart = [];
